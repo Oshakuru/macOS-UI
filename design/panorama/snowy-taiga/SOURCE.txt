@@ -1,0 +1,4 @@
+Title panorama: "Snowy taiga for macUI"
+Captured by the macUI owner (Oshakuru) in their own singleplayer Minecraft
+Java 1.21.11 world (snowy taiga), using the Panorama Studio mod.
+Original work by the pack owner; distributed under the macUI license.

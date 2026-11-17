@@ -2,7 +2,7 @@
 reference/
 *.jar
 
-# Build output (test packs are built locally; no releases yet)
+# Build output (zips are attached to GitHub releases, not committed)
 dist/
 
 # Local preview renders

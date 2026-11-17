@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 root = Path(__file__).resolve().parents[1]
 source = root / 'reference/vanilla-1.21.11/assets/minecraft/textures/gui'
-pack = root / 'dist/macUI-Light-0.29/assets/minecraft/textures/gui'
+pack = root / 'dist/macUI-Light-0.39/assets/minecraft/textures/gui'
 count = 0
 for folder in ('container', 'sprites/container'):
     for path in (source / folder).rglob('*.png'):
@@ -45,3 +45,17 @@ for path in rules:
     ini.read(pack_root / 'assets/optigui/gui/macui_shulker' / (path.stem + '.ini'))
     assert ini[rule['containers'].split(':')[1]]['replacement'] == replacement
 print('PASS: 17 unique color rules, matching INI/JSON paths and unchanged alpha/layout')
+
+properties_dir = pack_root / 'assets/minecraft/optifine/gui/container/macui_shulker'
+assert len(list(properties_dir.glob('*.properties'))) == 17
+for path in properties_dir.glob('*.properties'):
+    values = dict(line.split('=', 1) for line in path.read_text().splitlines() if line)
+    assert values['container'] == 'shulker_box'
+    assert 'name' not in values  # Both original and custom names must match.
+    ns, rel = values['texture'].split(':', 1)
+    assert (pack_root / 'assets' / ns / rel).is_file()
+    if path.stem != 'z_undyed':
+        assert values['colors'] == path.stem
+    else:
+        assert 'colors' not in values
+print('PASS: 17 OptiFine rules, texture targets and unrestricted custom names')

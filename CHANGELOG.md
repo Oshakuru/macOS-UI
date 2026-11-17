@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.0.0 (2026-11-17), first official release
+- New title panorama: a snowy taiga captured by the owner in their own 1.21.11 world (six 1024px faces, unchanged). Provenance in `PANORAMA-SOURCE.txt`. Removed the unused third-party panorama sources from the repo.
+- First public release of macUI Light. Owner tested the 0.27 and 0.34–0.40 changes in game.
+
+## 0.40 (2026-11-17), light prototype
+- Removed the custom title panorama at the owner's request. The title screen uses the vanilla panorama again; no panorama textures or source notice are packaged. Panorama sources stay in `design/panorama/` but are not built.
+
+## 0.39 (2026-11-17), light prototype
+- Replaced the stretched single-image panorama with the selected Frozen Peaks & Cherry Valley panorama from Beautiful main interface (CC0). All six 1024px faces copied unchanged; source/license notice included. Unrelated assets from the original pack are excluded.
+
+## 0.38 (2026-11-17), light prototype
+- Added the owner-supplied mountain meadow as the rotating title panorama: six 512px cube faces projected from a mirrored photo wrap, with softened sky/ground poles. Single-image approximation, not a captured 360° landscape.
+
+## 0.37 (2026-11-17), light prototype
+- XP fill now matches the vanilla level-number green (#80FF20). Segment markers and glass track retained.
+
+## 0.36 (2026-11-17), light prototype
+- Fixed soft/broken Monocraft text by baking a binary-alpha bitmap at its native pixel size instead of using a live TrueType provider. ASCII and Latin-1 text/numbers covered; unsupported characters retain vanilla fallback. In-game confirmation pending.
+
+## 0.35 (2026-11-17), light prototype
+- Monocraft replaces both vanilla text and Manrope digits through a TrueType provider at size 8, oversample 1. Vanilla providers remain as missing-glyph fallbacks. Removed Manrope sources/license and old number-atlas generation. Monocraft OFL license included. In-game typography checks pending.
+
+## 0.34 (2026-11-17), light prototype
+- All five toast backgrounds and the popup panel now share advancement-style Liquid Glass, including tutorial cards. System warning symbol and tutorial/item icons remain intact. Popup panels use the same glass. Hardcoded text contrast remains an in-game check.
+
+## 0.33 (2026-11-17), light prototype
+- New-recipe toasts now use exactly the same Liquid Glass background as advancement toasts. Tutorial cards retain their lighter underlay. Vanilla recipe text colors remain unchanged; in-game contrast needs checking.
+
+## 0.32 (2026-11-17), light prototype
+- Notification and popup panels now use the hotbar’s 2x Liquid Glass renderer, shared radius, tint, shadow and rim-free finish. Dark-text recipe/tutorial cards use a light underlay for contrast.
+
+## 0.31 (2026-11-17), light prototype
+- Restyled advancements: light window/tabs, blue completed frames, distinct task/goal/challenge silhouettes, graphite description panels and subdued category backgrounds.
+- Restyled toast/popup panels and notification badges. Kept dark surfaces behind white text, light recipe/tutorial cards, warning symbols and recognizable tutorial icons. Original dimensions and metadata preserved; in-game text/state checks pending.
+
+## 0.30 (2026-11-17), light prototype
+- Added OptiFine properties for all 16 shulker dye colors and an undyed fallback alongside existing OptiGUI support. No name filter: renamed and ordinary boxes use the same clear-title panel. No third-party artwork or shader code copied. Runtime compatibility remains untested.
+
 ## 0.29 (2026-11-17), light prototype
 - Added optional OptiGUI shulker color matching: 16 dye colors plus undyed, using soft panel/slot tints and the smaller 0.28 tiles. Vanilla fallback stays light. Includes OptiGUI 2 INI and 3 JSON rules.
 

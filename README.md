@@ -6,7 +6,7 @@ Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while stayi
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and restrained color accents.
 
-> **Status:** early prototype (0.29, light theme). Includes light inventory and workstation screens, Liquid Glass shelf hotbar and marked XP/jump bars, Manrope numbers, silver apple food icons, buttons, sliders and tooltips. Magnification is included but off by default; the selection bubble is on by default. Shulker color matching is optional through OptiGUI. Latest changes still need in-game verification.
+> **Status:** 1.0.0, light theme. Includes light inventory and workstation screens, Liquid Glass shelf hotbar and marked XP/jump bars, Monocraft text and numbers, silver apple food icons, buttons, sliders and tooltips. Magnification is included but off by default; the selection bubble is on by default. Shulker color matching is optional through OptiGUI or OptiFine.
 
 ## Screenshots
 
@@ -20,15 +20,23 @@ User-provided gameplay and menu captures. These show a modded setup; other visua
 
 ![Music and sound options](docs/images/sound-options.png)
 
+![Survival HUD and empty shelf hotbar](docs/images/survival-hotbar-empty.png)
+
+![Survival HUD and shelf hotbar with items](docs/images/survival-hotbar-items.png)
+
+![Shelf hotbar with diamond sword](docs/images/hotbar-diamond-sword.png)
+
+![Shelf hotbar with enchanted golden apple](docs/images/hotbar-enchanted-apple.png)
+
 ### Shulker color preview
 
-Generated texture preview, not an in-game capture. Color matching requires OptiGUI.
+Generated texture preview, not an in-game capture. Color matching requires OptiGUI or OptiFine.
 
 ![All 16 shulker dye colors and undyed](docs/images/shulker-colors-0.29.png)
 
 ## Principles
 
-- **Vanilla-compatible base.** Core styling works without mods or shaders. Respackopts adds settings; OptiGUI adds automatic shulker color matching.
+- **Vanilla-compatible base.** Core styling works without mods or shaders. Respackopts adds settings; OptiGUI or OptiFine adds automatic shulker color matching.
 - **Gameplay untouched.** Slot positions, hitboxes and interactions are exactly vanilla.
 - **Interface focused.** Includes optional item magnification through item definitions and GUI model wrappers; other item-definition packs can conflict.
 - **Apple principles, not a macOS copy.** Material hierarchy, restraint, contrast and craft, translated into pixel art.
@@ -39,7 +47,7 @@ Generated texture preview, not an in-game capture. Color matching requires OptiG
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macUI-Light-0.29.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macUI-Light-1.0.0.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
 
@@ -97,7 +105,7 @@ dist/        (ignored)    Built test packs: local only
 
 ## Development history
 
-Prototype milestones, oldest first. These are development iterations, not individually published releases. In-game testing of the latest changes is still pending.
+Prototype milestones, oldest first. These are development iterations, not individually published releases.
 
 | Prototype | What changed |
 |---|---|
@@ -131,6 +139,18 @@ Prototype milestones, oldest first. These are development iterations, not indivi
 | 0.27 | Inventory styling across remaining containers, workstations, mount inventories and related controls. |
 | 0.28 | Smaller slot tiles and inset loom/stonecutter recipe selections. |
 | 0.29 | Optional OptiGUI shulker colors: all 16 dyes plus undyed, with vanilla fallback. |
+| 0.30 | Added OptiFine color rules; custom names use the same clear title area. |
+| 0.31 | Advancements, toast/popup panels and notification badges match the pack. |
+| 0.32 | Notification and popup panels use hotbar-style Liquid Glass. |
+| 0.33 | Recipe toasts use the same glass background as advancement toasts. |
+| 0.34 | All toast backgrounds share advancement-style Liquid Glass. |
+| 0.35 | Monocraft text and numbers; removed Manrope font assets. |
+| 0.36 | Crisp bitmap Monocraft fixes the soft TrueType rendering. |
+| 0.37 | XP fill matches the level-number green. |
+| 0.38 | Mountain meadow title panorama, adapted from the supplied image. |
+| 0.39 | Replaced the single-image wrap with a CC0 six-face Frozen Peaks & Cherry Valley panorama. |
+| 0.40 | Removed the custom panorama; the vanilla title panorama is back. |
+| 1.0.0 | First official release, with the owner's own snowy taiga title panorama. |
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -148,8 +168,12 @@ See [CHANGELOG.md](CHANGELOG.md) for details.
 Code and original artwork in this repository: [GPL-3.0](LICENSE).
 Minecraft is a trademark of Mojang/Microsoft. Extracted vanilla reference assets and generated packs are not committed. Screenshots show Minecraft gameplay; generated previews show the pack styling. Not affiliated with Apple or Mojang.
 
-Numbers 0–9 use Manrope semibold; other characters retain the vanilla font. Manrope is distributed under the SIL Open Font License; see `design/fonts/Manrope-OFL.txt`.
+Text and numbers use Monocraft, with vanilla fallback for unsupported characters. Monocraft is distributed under the SIL Open Font License; see `design/fonts/Monocraft-OFL.txt`.
 
 ## Optional: colored shulker inventories
 
-With OptiGUI installed, shulker inventories automatically use soft tints matching all 16 dye colors plus undyed purple. Included in the main pack; no extra resource pack needed. Without OptiGUI, shulkers keep the standard light panel. Rules are included for OptiGUI 2 (INI) and 3 (JSON); live compatibility testing is pending.
+With OptiGUI or OptiFine installed, shulker inventories automatically use soft tints matching all 16 dye colors plus undyed purple. Included in the main pack; no extra resource pack needed. Without either mod, shulkers keep the standard light panel. Rules are included for OptiGUI 2 (INI), 3 (JSON), and OptiFine (properties). Renamed and unnamed boxes share the same unobstructed title area; live compatibility testing is pending.
+
+## Title panorama
+
+A snowy taiga captured by the macUI owner in their own Minecraft 1.21.11 world. It's original work, covered by the macUI license; see `design/panorama/snowy-taiga/SOURCE.txt`.

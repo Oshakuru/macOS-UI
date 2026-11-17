@@ -808,7 +808,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macui'
 MAG_WRAPPERS = {}
-VERSION = '0.29'   # single source for the pack title and the zip name
+VERSION = '1.0.0'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -1044,8 +1044,84 @@ def save(im, root, rel, meta=None):
         json.dump(meta, open(p + '.mcmeta', 'w'), indent=2)
 
 
+def build_advancements_notifications(root):
+    """Keep all canvases, distinct advancement silhouettes and nine-slice metadata."""
+    groups = ('advancements', 'sprites/advancements', 'sprites/toast',
+              'sprites/notification', 'sprites/popup')
+    count = 0
+    for group in groups:
+        for directory, _, filenames in os.walk(os.path.join(VAN, group)):
+            for filename in sorted(filenames):
+                if not filename.endswith('.png'):
+                    continue
+                path = os.path.join(directory, filename)
+                rel = os.path.relpath(path, VAN)
+                src = Image.open(path).convert('RGBA')
+                stem = filename[:-4]
+                image = container_palette(src)
+                if group == 'advancements' and 'backgrounds' in rel:
+                    pixels = np.array(src)
+                    luminance = pixels[:, :, :3].mean(axis=2)
+                    tint = np.array(_hexc(TOK['advancement.backgrounds'][stem])[:3])
+                    variation = (luminance - luminance.mean()) * TOK['advancement.texture_strength']
+                    pixels[:, :, :3] = np.clip(tint + variation[:, :, None], 0, 255).astype(np.uint8)
+                    image = Image.fromarray(pixels, 'RGBA')
+                elif group == 'sprites/advancements':
+                    if stem.startswith('box_') or stem == 'title_box':
+                        # Advancement descriptions are white; retain a graphite surface.
+                        image = Image.new('RGBA', src.size)
+                        r = TOK['notification.radius']
+                        edge = 'accent.fill' if stem == 'box_obtained' else 'control.top'
+                        rrect(image, 0, 0, *src.size, r, col(edge))
+                        rrect(image, 1, 1, src.width - 2, src.height - 2, r - 1, col('control.fill'))
+                    elif '_frame_' in stem:
+                        pixels = np.array(image)
+                        original = np.array(src)
+                        opaque = original[:, :, 3] > 0
+                        # Preserve task/goal/challenge shapes so status is not color-only.
+                        edge = (original[:, :, :3].mean(axis=2) < 90) & opaque
+                        obtained = stem.endswith('_obtained')
+                        pixels[:, :, :3][opaque] = col('accent.fill' if obtained else 'slot.tile')[:3]
+                        pixels[:, :, :3][edge] = col('accent.edge' if obtained else 'panel.edge')[:3]
+                        image = Image.fromarray(pixels, 'RGBA')
+                    elif stem.startswith('tab_'):
+                        pixels = np.array(image)
+                        original = np.array(src)
+                        body = (original[:, :, :3].mean(axis=2) > 100) & (original[:, :, 3] > 0)
+                        pixels[:, :, :3][body] = col('panel.fill' if stem.endswith('_selected') else 'tab.unselected')[:3]
+                        image = Image.fromarray(pixels, 'RGBA')
+                elif (group == 'sprites/toast' and src.width >= 100) or group == 'sprites/popup':
+                    image = liquid_glass_hd(src.width, src.height, 0, 0, src.width, src.height,
+                                            TOK['radius.dock'],
+                                            underlay='liquid.underlay_hud',
+                                            scale=TOK['hd.scale_hotbar'], rim=False)
+                    if stem == 'system':
+                        # Retain the warning symbol at its original UV position.
+                        pixels = np.array(src.resize(image.size, Image.Resampling.NEAREST))
+                        symbol = (pixels[:, :, 0] > 180) & (pixels[:, :, 1] > 150) & (pixels[:, :, 2] < 120)
+                        target = np.array(image)
+                        target[symbol] = pixels[symbol]
+                        image = Image.fromarray(target, 'RGBA')
+                elif group == 'sprites/notification':
+                    pixels = np.array(src)
+                    red = (pixels[:, :, 0] > pixels[:, :, 1].astype(int) * 1.5) & (pixels[:, :, 3] > 0)
+                    pixels[:, :, :3][red] = col('notification.badge')[:3]
+                    image = Image.fromarray(pixels, 'RGBA')
+                elif group == 'sprites/toast':
+                    # Keep recognizable tutorial/item art; only restyle neutral UI pixels.
+                    pixels = np.array(image)
+                    original = np.array(src)
+                    colorful = (original[:, :, :3].max(axis=2).astype(int) - original[:, :, :3].min(axis=2)) >= 12
+                    pixels[colorful] = original[colorful]
+                    image = Image.fromarray(pixels, 'RGBA')
+                meta_path = path + '.mcmeta'
+                save(image, root, rel, json.load(open(meta_path)) if os.path.exists(meta_path) else None)
+                count += 1
+    return count
+
+
 def build_shulker_colors(root):
-    """Optional OptiGUI variants; vanilla keeps the untinted main texture."""
+    """Optional OptiGUI/OptiFine variants; vanilla keeps the untinted texture."""
     base = Image.open(os.path.join(root, 'assets/minecraft/textures/gui/container/shulker_box.png')).convert('RGBA')
     source = np.array(base)
     for color, hex_color in TOK['shulker.colors'].items():
@@ -1062,6 +1138,16 @@ def build_shulker_colors(root):
         _write_json(root, f'assets/{NS}/optigui/gui/shulker/{color}.json',
                     {'containers': 'minecraft:' + block,
                      'textures': {'minecraft:textures/gui/container/shulker_box.png': replacement}})
+        # No name filter: ordinary and renamed boxes share the clear title area.
+        # The undyed fallback sorts after every explicit dye rule.
+        filename = 'z_undyed' if color == 'undyed' else color
+        properties = os.path.join(root, 'assets/minecraft/optifine/gui/container/macui_shulker',
+                                  filename + '.properties')
+        os.makedirs(os.path.dirname(properties), exist_ok=True)
+        with open(properties, 'w', encoding='utf-8') as stream:
+            stream.write(f'container=shulker_box\ntexture={replacement}\n')
+            if color != 'undyed':
+                stream.write(f'colors={color}\n')
         # OptiGUI 2 uses INI; OptiGUI 3 uses the JSON resources above.
         rel = f'assets/optigui/gui/macui_shulker/{color}.ini'
         dest = os.path.join(root, rel)
@@ -1070,25 +1156,45 @@ def build_shulker_colors(root):
             stream.write(f'[{block}]\nreplacement = {replacement}\n')
 
 
-def build_number_font(root):
-    """Override only ASCII digits; all other glyphs keep the vanilla providers."""
+def build_panorama(root):
+    """Install the owner-captured snowy taiga panorama unchanged."""
+    source = os.path.join(REPO, 'design', 'panorama', 'snowy-taiga')
+    for index in range(6):
+        filename = f'panorama_{index}.png'
+        dest = os.path.join(root, 'assets/minecraft/textures/gui/title/background', filename)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copyfile(os.path.join(source, filename), dest)
+    shutil.copyfile(os.path.join(source, 'SOURCE.txt'), os.path.join(root, 'PANORAMA-SOURCE.txt'))
+
+
+def build_text_font(root):
+    """Bake Monocraft at its pixel size instead of Minecraft's smoothed TTF provider."""
     font_dir = os.path.join(REPO, 'design', 'fonts')
-    font = ImageFont.truetype(os.path.join(font_dir, 'Manrope.ttf'), TOK['font.numbers.size'])
-    font.set_variation_by_axes([TOK['font.numbers.weight'] if axis['name'] == b'Weight'
-                               else axis['default'] for axis in font.get_variation_axes()])
-    cell = TOK['font.numbers.cell']
-    atlas = Image.new('RGBA', (cell * 10, cell), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(atlas)
-    top = min(font.getbbox(digit)[1] for digit in '0123456789')
-    for index, digit in enumerate('0123456789'):
-        draw.text((index * cell, -top), digit, font=font, fill='white')
-    save_at(atlas, root, f'assets/{NS}/textures/font/numbers.png')
+    font = ImageFont.truetype(os.path.join(font_dir, 'Monocraft.ttf'), TOK['font.text.size'])
+    characters = ''.join(chr(code) for code in range(33, 256)
+                         if not 127 <= code <= 160 and code != 173)
+    columns, cell = TOK['font.text.columns'], TOK['font.text.cell']
+    rows = [characters[i:i + columns].ljust(columns, '\0') for i in range(0, len(characters), columns)]
+    atlas = Image.new('RGBA', (columns * cell, len(rows) * cell))
+    for row, chars in enumerate(rows):
+        for column, char in enumerate(chars):
+            if char == '\0':
+                continue
+            glyph = Image.new('L', (cell, cell))
+            draw = ImageDraw.Draw(glyph)
+            draw.fontmode = '1'
+            draw.text((0, TOK['font.text.ascent']), char, font=font, fill=255, anchor='ls')
+            # Binary alpha keeps glyphs crisp at every integer GUI scale.
+            glyph = glyph.point(lambda alpha: 255 if alpha >= 128 else 0)
+            colored = Image.new('RGBA', glyph.size, 'white')
+            colored.putalpha(glyph)
+            atlas.alpha_composite(colored, (column * cell, row * cell))
+    save_at(atlas, root, f'assets/{NS}/textures/font/monocraft.png')
     default = json.load(open(os.path.join(REF, 'assets', 'minecraft', 'font', 'default.json')))
-    default['providers'].insert(0, {'type': 'bitmap', 'file': f'{NS}:font/numbers.png',
-                                   'height': TOK['font.numbers.height'],
-                                   'ascent': TOK['font.numbers.ascent'], 'chars': ['0123456789']})
+    default['providers'].insert(0, {'type': 'bitmap', 'file': f'{NS}:font/monocraft.png',
+                                   'height': cell, 'ascent': TOK['font.text.ascent'], 'chars': rows})
     _write_json(root, 'assets/minecraft/font/default.json', default)
-    shutil.copyfile(os.path.join(font_dir, 'Manrope-OFL.txt'), os.path.join(root, 'Manrope-OFL.txt'))
+    shutil.copyfile(os.path.join(font_dir, 'Monocraft-OFL.txt'), os.path.join(root, 'Monocraft-OFL.txt'))
 
 
 def build_pack(name, desc, btn_r):
@@ -1097,7 +1203,8 @@ def build_pack(name, desc, btn_r):
     json.dump({"pack": {"description": desc, "min_format": [75, 0], "max_format": [75, 0]}},
               open(os.path.join(root, 'pack.mcmeta'), 'w'), indent=2, ensure_ascii=False)
     build_icon().save(os.path.join(root, 'pack.png'))
-    build_number_font(root)
+    build_text_font(root)
+    build_panorama(root)
     inv, report = build_inventory()
     save(inv, root, 'container/inventory.png')
     for tab in ('tab_items', 'tab_item_search', 'tab_inventory'):
@@ -1168,6 +1275,7 @@ def build_pack(name, desc, btn_r):
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
     report['containers'] = build_remaining_containers(root)
     build_shulker_colors(root)
+    report['advancements_notifications'] = build_advancements_notifications(root)
     report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
     report['rpo_files'] = build_options(root)
     z = os.path.join(OUT, name + '.zip')
@@ -1180,5 +1288,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack(f'macUI-Light-{VERSION}', f'§fmacUI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
+    rep = build_pack(f'macUI-Light-{VERSION}', f'§fmacUI §7— Light\n§8v{VERSION}', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
