@@ -83,5 +83,7 @@
 - User request: replace the food drumsticks with the golden apple, made silver. The 16×16 item can't shrink cleanly to the 9×9 HUD icon, so the apple is redrawn by hand (`APPLE` grid in `tools/build.py`). The palettes are the `food.*` tokens. No Mojang texture is copied.
 - The Apple logo itself is not redrawn for HUD icons; only the user's own artwork is used, for the pack icon.
 
+- **Approved:** the silver apple food icons (user, 2026-11-17).
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
