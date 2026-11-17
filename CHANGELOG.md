@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.16 (2026-11-17), light prototype
+- Shelf hotbar: the white line along the back edge is replaced by a very soft glow that fades into the glass (α 36, 2.5-px feather), so the shelf reads as one seamless surface. The optional outline setting is unchanged.
+
 ## 0.15 (2026-11-17), light prototype
 - **More Respackopts settings** (optional; vanilla still uses the defaults):
   - Magnification size: off, 1.25×, 1.38× (default), 1.5× or 1.75×.

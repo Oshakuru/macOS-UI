@@ -101,5 +101,7 @@
 - **How the fallbacks work** (verified in the respackopts 4.14.3 classes): a file `.rpo` takes `fallbacks` (a list; each alternative has its own `.rpo` condition), while a folder `.rpo` takes a single `fallback`. So hotbar combinations use file chains, and magnification sizes use nested folder rules: `magnified/` → large, `magnified/minecraft/` → small, `magnified/minecraft/{block,item}/` → extra large. `DirFilterAdditive` is enabled for the folder fallbacks.
 - **Not yet tested with the mod installed.**
 
+- **0.16:** shelf back edge made seamless (user request). No hard lip line, only a soft fade.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

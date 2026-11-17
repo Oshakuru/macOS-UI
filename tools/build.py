@@ -490,7 +490,7 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, 
 
 def liquid_shelf_hd(W, H, x, w, underlay, rim=False, scale=None):
     """Liquid Glass *shelf* (classic 3D-Dock look): a glass platform the items sit on instead of a
-    box around them. Trapezoid narrowing towards the back (perspective), bright top lip, faint front
+    box around them. Trapezoid narrowing towards the back (perspective), soft back-edge glow, faint front
     edge, translucent surface with a light-to-clear gradient, soft shadow row underneath."""
     from PIL import ImageDraw
     s = scale or TOK['hd.scale']
@@ -513,7 +513,8 @@ def liquid_shelf_hd(W, H, x, w, underlay, rim=False, scale=None):
     _over(img, (1, 1, 1), (t0[3] + (t1[3] - t0[3]) * f) * cov)
     # top lip: bright 0.75-px band along the back edge; faint band along the front edge
     lip = _rgba('shelf.lip'); front = _rgba('shelf.front')
-    _over(img, (1, 1, 1), lip[3] * cov * np.clip(1 - (py - top) / 0.75, 0, 1))
+    # back edge: a very soft glow fading into the surface (no hard line)
+    _over(img, (1, 1, 1), lip[3] * cov * np.clip(1 - (py - top) / TOK['shelf.lip_feather'], 0, 1) ** 2)
     _over(img, (1, 1, 1), front[3] * cov * np.clip(1 - (bot - py) / 0.75, 0, 1))
     if rim:  # optional outline around the whole shelf
         edge = cov - np.asarray(big.filter(__import__('PIL.ImageFilter', fromlist=['MinFilter']).MinFilter(2 * ss + 1))
@@ -665,7 +666,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
 MAG_WRAPPERS = {}
-VERSION = '0.15'   # single source for the pack title and the zip name
+VERSION = '0.16'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
