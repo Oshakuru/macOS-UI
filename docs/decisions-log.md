@@ -32,6 +32,13 @@
 - Glass player area: real transparency (α 120 at the top, fading to α 60), a `#D1D1D6` edge and a specular rim. Vanilla can't blur, so the glass tints the world rather than frosting it.
 - To verify in game: partial transparency renders as expected.
 
+## 0.3 in-game results
+- The glass player area renders real transparency. User asked for it to be more transparent.
+- Buttons render correctly in the game menu.
+
+## Prototype 0.4
+- **Hotbar → macOS Dock** (user request): dark translucent fill (`#2C2C2E`, α 150), a thin light rim (white α 46), a soft dark edge and 7-px corners. No per-slot boxes. The selection is a soft highlight plus a 2×2 white indicator dot under the item. The light rim also addresses the hotbar's poor contrast at night.
+- Glass player area: α 72 at the top, fading to α 32.
+
 ## Open
-- Hotbar contrast at night.
-- Pill buttons in game.
+- Confirm which button variant was in the 0.3 test (pill border fix).

@@ -150,32 +150,36 @@ def build_inventory():
     return out, report
 
 
-# ---------------------------------------------------------------- HUD
+# ---------------------------------------------------------------- HUD (macOS Dock style)
+def dock(im, x, y, w, h):
+    """Dark translucent Dock material: soft dark edge, thin light rim, translucent fill."""
+    r = TOK['radius.dock']
+    rrect(im, x, y, w, h, r, col('dock.edge'))
+    rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, col('dock.rim'))
+    rrect(im, x + 2, y + 2, w - 4, h - 4, r - 2, col('dock.fill'))
+
+
 def build_hotbar():
+    # No per-slot boxes: items float on the Dock like app icons.
     im = Image.new('RGBA', (182, 22), (0, 0, 0, 0))
-    r = TOK['radius.hud']
-    rrect(im, 0, 0, 182, 22, r, col('hud.edge'))
-    rrect(im, 1, 1, 180, 20, r - 1, col('hud.fill'))
-    for i in range(9):
-        rrect(im, 2 + 20 * i, 2, 18, 18, TOK['radius.slot'], col('hud.cell'))
+    dock(im, 0, 0, 182, 22)
     return im
 
 
 def build_selection():
+    # 24x23 sprite drawn at (slotX-1, hotbarY-1): soft highlight behind the item + Dock "running" dot below it.
     im = Image.new('RGBA', (24, 23), (0, 0, 0, 0))
-    r = TOK['radius.hud']
-    rrect(im, 0, 0, 24, 23, r, col('hud.selection'))
-    rrect(im, 2, 2, 20, 19, r - 2, None, mode='clear')
+    rrect(im, 3, 3, 18, 18, 4, col('dock.selected'))
+    dot = col('dock.indicator')
+    for xx in (11, 12):
+        for yy in (20, 21):
+            im.putpixel((xx, yy), dot)
     return im
 
 
 def build_offhand(side):
     im = Image.new('RGBA', (29, 24), (0, 0, 0, 0))
-    x = 0 if side == 'left' else 7
-    r = TOK['radius.hud']
-    rrect(im, x, 1, 22, 22, r, col('hud.edge'))
-    rrect(im, x + 1, 2, 20, 20, r - 1, col('hud.fill'))
-    rrect(im, x + 2, 3, 18, 18, TOK['radius.slot'], col('hud.cell'))
+    dock(im, 0 if side == 'left' else 7, 1, 22, 22)
     return im
 
 
@@ -263,7 +267,7 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('VanillaAppleUI-Light-Rounded', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.3 · rounded buttons', TOK['radius.button'])
-    build_pack('VanillaAppleUI-Light-Pill', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.3 · pill buttons', TOK['radius.pill'])
+    rep = build_pack('VanillaAppleUI-Light-Rounded', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.4 · rounded buttons', TOK['radius.button'])
+    build_pack('VanillaAppleUI-Light-Pill', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.4 · pill buttons', TOK['radius.pill'])
     print(json.dumps({k: (v if k == 'glyph_pixels' else len(v)) for k, v in rep.items()}))
     print('slots', rep['slots']); print('wells', rep['wells'])

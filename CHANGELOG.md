@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4 (2026-11-17), light prototype
+- Hotbar restyled as a macOS Dock: a dark translucent bar with a thin light rim and 7-px corners, and no boxes around slots. The selected slot gets a soft highlight and a white "running app" dot below it. The offhand slots match.
+- Glass player area made more see-through (α 72 → 32, was 120 → 60).
+- Confirmed in game (0.3): the glass player area renders transparency, and buttons load correctly.
+
 ## 0.3 (2026-11-17), light prototype
 - The player preview area is now translucent "glass": real transparency fading from α 120 to α 60, a light edge, a bright top/left rim and a faint bottom/right rim. No blur is possible in vanilla.
 
