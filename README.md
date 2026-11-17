@@ -20,14 +20,6 @@ User-provided gameplay and menu captures. These show a modded setup; other visua
 
 ![Music and sound options](docs/images/sound-options.png)
 
-![Survival HUD and empty shelf hotbar](docs/images/survival-hotbar-empty.png)
-
-![Survival HUD and shelf hotbar with items](docs/images/survival-hotbar-items.png)
-
-![Shelf hotbar with diamond sword](docs/images/hotbar-diamond-sword.png)
-
-![Shelf hotbar with enchanted golden apple](docs/images/hotbar-enchanted-apple.png)
-
 ### Shulker color preview
 
 Generated texture preview, not an in-game capture. Color matching requires OptiGUI.
