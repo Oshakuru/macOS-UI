@@ -115,5 +115,8 @@
 - The Control Center fill prototype was rejected by the user. **Confirmed:** a value-dependent fill is impossible in vanilla (fixed track image + 8-px handle).
 - Chosen instead: the handle is HD Liquid Glass, blue while hovered or dragged.
 
+## Name: macUI
+- **"macUI" is the official name** (user decision, 2026-11-17), replacing "macOS UI". Repo renamed to `Oshakuru/macUI`. Zip `macUI-Light-<version>.zip`, title "macUI — Light", namespace `macui`, Respackopts ID `macUi`.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.21 (2026-11-17), light prototype
+- **Renamed to macUI.** The repo is now [Oshakuru/macUI](https://github.com/Oshakuru/macUI). The pack builds as `macUI-Light-<version>.zip` and shows as "macUI — Light" in game. The internal namespace is now `macui`, and the Respackopts pack ID is `macUi`, so saved Respackopts settings from earlier prototypes reset to the defaults once.
+
 ## 0.20 (2026-11-17), light prototype
 - **Slider handle in Liquid Glass** (HD, 4×): a clear glass knob with a specular rim and soft shadow, which turns **Apple-blue glass** while hovered or dragged. The track is unchanged (graphite pill).
 
