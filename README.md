@@ -6,7 +6,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 
 ![Liquid Glass hotbar](docs/images/hotbar-0.5-liquid-glass.png)
 
-> **Status:** early prototype (0.6, light theme). Only the survival inventory, hotbar, buttons, slot highlight and tooltips are restyled so far. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.7, light theme). Restyled so far: survival and creative inventories, recipe book button, hotbar, buttons, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 

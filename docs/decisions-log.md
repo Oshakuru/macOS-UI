@@ -49,5 +49,13 @@
 ## 0.6: button shape decided
 - **Pill buttons** (10-px corners; nine-slice border left/right 10, top/bottom 9). Rounded rectangle dropped. One pack: `VanillaAppleUI-Light`.
 
+## 0.7: creative inventory and recipe book
+- Creative screens use the same container system (`repaint_container()`).
+  - **Search field is dark**, because vanilla draws its text white (same rule as buttons).
+  - Destroy-item slot: red tile (`#FFE3E1`) with an Apple-red (`#FF3B30`) ×.
+  - Tabs: selected = panel fill, merging into the panel; unselected = `#D8D8DD`; 5-px rounded outer corners.
+  - Scroller: `#AEAEB2` pill.
+- **Recipe book button** (user request): panel-coloured button; the book's green ramp is mapped to the accent blue ramp (`book.map` token).
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
