@@ -6,11 +6,11 @@ Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while stayi
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and a single blue accent.
 
-![Liquid Glass hotbar](docs/images/hotbar-0.8-hd.png)
+![Liquid Glass shelf hotbar](docs/images/hotbar-shelf-0.16.png)
 
 ![Recipe book](docs/images/recipe-book-0.8.png)
 
-> **Status:** early prototype (0.16, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.17, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
@@ -25,7 +25,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.16.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.17.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
 
@@ -37,7 +37,7 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 |---|---|---|
 | Magnify selected item | Normal (1.38×) | Off / small 1.25× / normal 1.38× / large 1.5× / extra large 1.75× |
 | Glass bubble on selected slot | Off | On / off |
-| Hotbar style | Dock (glass bar) | Dock / shelf (glass ledge the items sit on) |
+| Hotbar style | Shelf (glass ledge) | Shelf (glass ledge the items sit on) / Dock (glass bar) |
 | Hotbar opacity | Clear | Clear / frosted / dark / solid |
 | Glass outline on hotbar | Off | On / off |
 | Food icons | Silver apples | Silver apples / vanilla |

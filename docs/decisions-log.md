@@ -103,5 +103,7 @@
 
 - **0.16:** shelf back edge made seamless (user request). No hard lip line, only a soft fade.
 
+- **0.17: the shelf is the default hotbar** (user decision). The Dock bar is an optional Respackopts setting.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

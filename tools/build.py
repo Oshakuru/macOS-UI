@@ -666,7 +666,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
 MAG_WRAPPERS = {}
-VERSION = '0.16'   # single source for the pack title and the zip name
+VERSION = '0.17'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -756,7 +756,7 @@ RPO_CONF = {
         'hud': {
             'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large', 'extraLarge']},
             'selectionBubble': False,
-            'hotbarStyle': {'type': 'enum', 'default': 'dock', 'values': ['dock', 'shelf']},
+            'hotbarStyle': {'type': 'enum', 'default': 'shelf', 'values': ['shelf', 'dock']},
             'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
             'hotbarOutline': False,
             'foodIcons': {'type': 'enum', 'default': 'silverApples', 'values': ['silverApples', 'vanilla']},
@@ -848,7 +848,7 @@ def build_options(root):
                 {'condition': '!hud.selectionBubble', 'fallbacks': [alt + 'bubble/hotbar_selection.png']}); n += 1
 
     # hud.hotbarStyle x hud.hotbarOpacity x hud.hotbarOutline -> one file per combination -------
-    combos = [(st, o, rim) for st in ('dock', 'shelf') for o in TOK['hotbar.opacity'] for rim in (False, True)]
+    combos = [(st, o, rim) for st in ('shelf', 'dock') for o in TOK['hotbar.opacity'] for rim in (False, True)]
     makers = {
         'sprites/hud/hotbar.png': {'dock': lambda u, r: build_hotbar(rim=r, underlay=u),
                                    'shelf': lambda u, r: build_hotbar_shelf(rim=r, underlay=u)},
@@ -861,7 +861,7 @@ def build_options(root):
         fallbacks = []
         for st, o, rim in combos:
             cond = f"hud.hotbarStyle.{st} & hud.hotbarOpacity.{o} & {'' if rim else '!'}hud.hotbarOutline"
-            if (st, o, rim) == ('dock', 'clear', False):
+            if (st, o, rim) == ('shelf', 'clear', False):   # the pack's default look
                 main_cond = cond
                 continue
             path = alt + f"hotbar/{st}_{o}{'_outline' if rim else ''}/" + rel
@@ -958,10 +958,10 @@ def build_pack(name, desc, btn_r):
     for kind in ('full', 'half', 'empty'):
         save(build_food(kind, 'food.empty' if kind == 'empty' else 'food.silver'), root, f'sprites/hud/food_{kind}.png')
         save(build_food(kind, 'food.empty_hunger' if kind == 'empty' else 'food.hunger'), root, f'sprites/hud/food_{kind}_hunger.png')
-    save(build_hotbar(), root, 'sprites/hud/hotbar.png')
+    save(build_hotbar_shelf(), root, 'sprites/hud/hotbar.png')          # default: Liquid Glass shelf
     save(build_selection(), root, 'sprites/hud/hotbar_selection.png')
-    save(build_offhand('left'), root, 'sprites/hud/hotbar_offhand_left.png')
-    save(build_offhand('right'), root, 'sprites/hud/hotbar_offhand_right.png')
+    save(build_offhand_shelf('left'), root, 'sprites/hud/hotbar_offhand_left.png')
+    save(build_offhand_shelf('right'), root, 'sprites/hud/hotbar_offhand_right.png')
     save(build_highlight('back'), root, 'sprites/container/slot_highlight_back.png', nine(24, 24, 4))
     save(build_highlight('front'), root, 'sprites/container/slot_highlight_front.png', nine(24, 24, 4))
     # Nine-slice borders must leave a stretchable centre: top+bottom == height failed to load in game

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17 (2026-11-17), light prototype
+- **The Liquid Glass shelf is now the default hotbar** (and offhand), also on plain vanilla. The Dock-style glass bar moves to the optional settings (Hotbar style → Dock).
+
 ## 0.16 (2026-11-17), light prototype
 - Shelf hotbar: the white line along the back edge is replaced by a very soft glow that fades into the glass (α 36, 2.5-px feather), so the shelf reads as one seamless surface. The optional outline setting is unchanged.
 
