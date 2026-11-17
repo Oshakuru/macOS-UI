@@ -111,5 +111,9 @@
 
 - **0.19:** magnification setting simplified to 1.00 (off) / 1.25 / 1.38 (default) / 1.50 (user decision; sizes have to be pre-built, so a free slider isn't possible).
 
+## Prototype: Control Center sliders (not in the pack or settings)
+- User asked for sliders that fill like iOS Control Center. **A true fill isn't possible:** vanilla draws one fixed track image plus an 8-px handle at the value.
+- The prototype approximates it: a translucent grey glass track (`cc.*` tokens) and a white rounded handle as the "edge of the fill" (blue while dragging). Built only with `python3 tools/build.py --cc-sliders` as a separate zip. **Not added to the settings** unless the user asks.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

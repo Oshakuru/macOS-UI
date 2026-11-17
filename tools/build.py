@@ -15,8 +15,9 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 TOK = json.load(open(os.path.join(REPO, 'design', 'tokens.json')))
-REF = sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, 'reference', 'vanilla-1.21.11')
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(REPO, 'dist')
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]   # flags: --cc-sliders (prototype)
+REF = ARGS[0] if len(ARGS) > 0 else os.path.join(REPO, 'reference', 'vanilla-1.21.11')
+OUT = ARGS[1] if len(ARGS) > 1 else os.path.join(REPO, 'dist')
 VAN = os.path.join(REF, 'assets', 'minecraft', 'textures', 'gui')
 if not os.path.isdir(VAN):
     sys.exit(f'Vanilla reference not found at {REF}. Run tools/extract_vanilla.py first.')
@@ -888,6 +889,54 @@ def build_options(root):
     return n
 
 
+# ---------------------------------------------------------------- prototype: Control Center sliders
+# Not part of the pack or its settings. Vanilla draws a slider as one fixed track image plus an
+# 8-px handle at the value, so a growing fill is impossible; this approximates iOS Control Center:
+# translucent grey glass track, white handle as the "edge of the fill".
+def build_cc_track(highlighted):
+    r = TOK['radius.button']
+    im = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
+    rrect(im, 0, 0, 200, 20, r, col('cc.edge'))
+    rrect(im, 1, 1, 198, 18, r - 1, col('cc.track_hover' if highlighted else 'cc.track'))
+    hline(im, r, 1, 200 - 2 * r, col('cc.rim'))
+    return im
+
+
+def build_cc_handle(highlighted):
+    im = Image.new('RGBA', (8, 20), (0, 0, 0, 0))
+    rrect(im, 1, 3, 6, 15, 3, col('cc.handle_shadow'))          # soft drop shadow (1 px down)
+    rrect(im, 1, 2, 6, 15, 3, col('accent.fill') if highlighted else col('cc.handle'))
+    return im
+
+
+def build_cc_slider_prototype(base_root):
+    """Copy the built pack and swap only the four slider sprites."""
+    name = os.path.basename(base_root) + '-cc-sliders'
+    root = os.path.join(OUT, name)
+    shutil.rmtree(root, ignore_errors=True)
+    shutil.copytree(base_root, root)
+    # the prototype pack ships without the Respackopts settings
+    for d, _, fs in os.walk(root):
+        for f in fs:
+            if f.endswith('.rpo') or f == 'respackopts.json5':
+                os.remove(os.path.join(d, f))
+    shutil.rmtree(os.path.join(root, 'assets', NS, 'alt'), ignore_errors=True)
+    pill = {"left": TOK['radius.button'], "right": TOK['radius.button'], "top": 9, "bottom": 9}
+    save(build_cc_track(False), root, 'sprites/widget/slider.png', nine(200, 20, pill))
+    save(build_cc_track(True), root, 'sprites/widget/slider_highlighted.png', nine(200, 20, pill))
+    hb = {"left": 3, "right": 3, "top": 3, "bottom": 3}
+    save(build_cc_handle(False), root, 'sprites/widget/slider_handle.png', nine(8, 20, hb))
+    save(build_cc_handle(True), root, 'sprites/widget/slider_handle_highlighted.png', nine(8, 20, hb))
+    meta = json.load(open(os.path.join(root, 'pack.mcmeta')))
+    meta['pack']['description'] = f'§fmacOS UI §7— Light\n§8Prototype {VERSION} · CC sliders'
+    json.dump(meta, open(os.path.join(root, 'pack.mcmeta'), 'w'), indent=2, ensure_ascii=False)
+    with zipfile.ZipFile(root + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+        for d, _, fs in os.walk(root):
+            for f in fs:
+                full = os.path.join(d, f); zf.write(full, os.path.relpath(full, root))
+    return root + '.zip'
+
+
 # ---------------------------------------------------------------- assemble
 def save_at(im, root, rel, meta=None):
     """Save to an explicit path relative to the pack root (used for alternative files)."""
@@ -986,3 +1035,5 @@ if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     rep = build_pack(f'macOS-UI-Light-{VERSION}', f'§fmacOS UI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
+    if '--cc-sliders' in sys.argv:
+        print('prototype:', build_cc_slider_prototype(os.path.join(OUT, f'macOS-UI-Light-{VERSION}')))
