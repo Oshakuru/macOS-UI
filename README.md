@@ -4,9 +4,9 @@ Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while stayi
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and a single blue accent.
 
-![Inventory: glass player area](docs/images/inventory-0.3-glass.png)
+![Liquid Glass hotbar](docs/images/hotbar-0.5-liquid-glass.png)
 
-> **Status:** early prototype (0.3, light theme). Only the survival inventory, hotbar, buttons, slot highlight and tooltips are restyled so far. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.6, light theme). Only the survival inventory, hotbar, buttons, slot highlight and tooltips are restyled so far. A dark theme follows once the light theme is finished.
 
 ## Principles
 
@@ -23,9 +23,6 @@ The pack is still being designed and tested, so there are no releases yet. To tr
 2. Copy a zip from `dist/` into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
-During prototyping there are two variants. Enable only one:
-- `VanillaAppleUI-Light-Rounded`: rounded-rectangle buttons
-- `VanillaAppleUI-Light-Pill`: pill buttons
 
 ## Build from source
 
@@ -35,7 +32,7 @@ Requires Python 3.10+ and Pillow (`pip install pillow`).
 # 1. Extract the vanilla reference assets from your own Minecraft jar (one time)
 python3 tools/extract_vanilla.py path/to/minecraft-1.21.11-client.jar
 
-# 2. Build both packs into dist/
+# 2. Build the pack into dist/
 python3 tools/build.py
 ```
 
@@ -48,7 +45,7 @@ All colours and radii live in [`design/tokens.json`](design/tokens.json). Change
 ```
 design/tokens.json        Design tokens: every colour and corner radius
 tools/extract_vanilla.py  Pulls vanilla GUI reference assets out of the client jar
-tools/build.py            Generates the packs from tokens + vanilla geometry
+tools/build.py            Generates the pack from tokens + vanilla geometry
 docs/                     Feasibility study, theme plan, decisions log, testing checklist
 docs/images/              Preview renders
 reference/   (ignored)    Extracted Mojang assets: local only, never committed

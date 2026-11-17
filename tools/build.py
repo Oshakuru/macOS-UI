@@ -5,7 +5,7 @@ Usage:
     python3 tools/build.py                                                  # -> dist/
 
 Optional: python3 tools/build.py <vanilla_reference_root> <out_dir>
-Produces two packs (rounded-rect buttons and pill buttons) as folders and zips in dist/.
+Produces the pack as a folder and a zip in dist/.
 Every colour and radius comes from design/tokens.json.
 """
 import json, math, os, shutil, sys, zipfile
@@ -56,29 +56,6 @@ def panel_box(im, x, y, w, h):
     rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, col('panel.fill'))
     hline(im, x + r, y + 1, w - 2 * r, col('panel.highlight'))
     hline(im, x + r, y + h - 2, w - 2 * r, col('panel.shade'))
-
-
-def glass(im, x, y, w, h):
-    """Apple-style glass well: real alpha (the world shows through), light rim, soft vertical falloff.
-    No blur is possible in a vanilla pack; translucency + specular rim carry the material."""
-    r = TOK['radius.glass']
-    rrect(im, x, y, w, h, r, col('glass.edge'))
-    rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, None, mode='clear')
-    top, bot = col('glass.fill_top'), col('glass.fill_bottom')
-    tmp = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    rrect(tmp, x + 1, y + 1, w - 2, h - 2, r - 1, (255, 255, 255, 255))
-    for yy in range(y + 1, y + h - 1):
-        t = (yy - y - 1) / max(h - 3, 1)
-        a = round(top[3] + (bot[3] - top[3]) * t)
-        for xx in range(x + 1, x + w - 1):
-            if tmp.getpixel((xx, yy))[3]:
-                im.putpixel((xx, yy), (255, 255, 255, a))
-    # specular rim: bright along top and left, faint along bottom and right
-    rim, low = col('glass.rim'), col('glass.rim_low')
-    for xx in range(x + 2, x + w - 2):
-        im.putpixel((xx, y + 1), rim); im.putpixel((xx, y + h - 2), low)
-    for yy in range(y + 2, y + h - 2):
-        im.putpixel((x + 1, yy), rim); im.putpixel((x + w - 2, yy), low)
 
 
 def well(im, x, y, w, h, r=None):
@@ -139,7 +116,7 @@ def build_inventory():
             if n == w * h and is_framed(src, x, y, w, h):
                 fx, fy, fw, fh = x - 1, y - 1, w + 2, h + 2
                 if rgb == (0, 0, 0):
-                    glass(out, fx, fy, fw, fh); report['wells'].append((fx, fy, fw, fh))
+                    liquid_glass(out, fx, fy, fw, fh, TOK['radius.glass'], tint='liquid.well_tint_top', tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False); report['wells'].append((fx, fy, fw, fh))
                 else:
                     well(out, fx, fy, fw, fh); report['slots'].append((fx, fy, fw, fh))
             elif rgb == (0x8B, 0x8B, 0x8B) and n >= 10:
@@ -150,32 +127,101 @@ def build_inventory():
     return out, report
 
 
-# ---------------------------------------------------------------- HUD
+# ---------------------------------------------------------------- Liquid Glass material
+def shape_mask(w, h, r):
+    m = set()
+    for i in range(h):
+        k = min(i, h - 1 - i)
+        ins = inset(r, k) if k < r else 0
+        for j in range(ins, w - ins):
+            m.add((j, i))
+    return m
+
+
+def over(im, xy, c):
+    """Alpha-composite one RGBA colour onto a pixel."""
+    if not (0 <= xy[0] < im.width and 0 <= xy[1] < im.height) or c[3] == 0:
+        return
+    br, bg, bb, ba = im.getpixel(xy)
+    a = c[3] / 255; oa = a + ba / 255 * (1 - a)
+    if oa == 0:
+        return
+    mix = lambda f, b: round((f * a + b * (ba / 255) * (1 - a)) / oa)
+    im.putpixel(xy, (mix(c[0], br), mix(c[1], bg), mix(c[2], bb), round(oa * 255)))
+
+
+def liquid_glass(im, x, y, w, h, r, underlay=None, tint=None, tint_bottom=None, edge=None, shadow=True):
+    """Apple Liquid Glass, translated to static pixels (no blur or refraction exists in vanilla):
+    - clear body: very light tint over real transparency (optional dark underlay keeps white HUD text legible)
+    - specular rim: brightest where light hits (top-left), secondary glint at bottom-right, dim on the sides
+    - lensing band: a softer second ring inside the rim, so the edge reads as thick glass
+    - floating shadow: one soft dark row under the shape
+    """
+    if shadow:
+        h -= 1
+    outer = shape_mask(w, h, r)
+    inner = shape_mask(w - 2, h - 2, max(r - 1, 0))
+    inner2 = shape_mask(w - 4, h - 4, max(r - 2, 0))
+    rim = {p for p in outer if (p[0] - 1, p[1] - 1) not in inner}
+    band = {(p[0] + 1, p[1] + 1) for p in inner if (p[0] - 1, p[1] - 1) not in inner2}
+    body = {(p[0] + 2, p[1] + 2) for p in inner2}
+    for (px, py) in outer:   # glass replaces whatever was painted underneath (e.g. the opaque panel)
+        if 0 <= x + px < im.width and 0 <= y + py < im.height:
+            im.putpixel((x + px, y + py), (0, 0, 0, 0))
+    if shadow:
+        sh = col('liquid.shadow')
+        for (px, py) in outer:
+            if (px, py + 1) not in outer:
+                over(im, (x + px, y + py + 1), sh)
+    cx, cy = (w - 1) / 2, (h - 1) / 2
+    lo, hi = TOK['liquid.rim_min'], TOK['liquid.rim_max']
+
+    def spec(px, py):
+        nx, ny = (px - cx) / max(cx, 1), (py - cy) / max(cy, 1)
+        n = math.hypot(nx, ny) or 1
+        nx, ny = nx / n, ny / n
+        key = max(0.0, -0.707 * nx - 0.707 * ny)          # light from top-left
+        echo = 0.55 * max(0.0, 0.707 * nx + 0.707 * ny)   # glint on the opposite corner
+        return lo + (hi - lo) * max(key, echo) ** 1.6
+
+    t_top = col(tint) if tint else col('liquid.tint')
+    t_bot = col(tint_bottom) if tint_bottom else t_top
+    for (px, py) in band | body:
+        if underlay:
+            over(im, (x + px, y + py), col(underlay))
+        f = py / max(h - 1, 1)
+        a = round(t_top[3] + (t_bot[3] - t_top[3]) * f)
+        over(im, (x + px, y + py), (255, 255, 255, a))
+    for (px, py) in band:
+        over(im, (x + px, y + py), (255, 255, 255, round(spec(px, py) * TOK['liquid.band'])))
+    for (px, py) in rim:
+        if edge:
+            im.putpixel((x + px, y + py), col(edge))
+        if underlay:
+            over(im, (x + px, y + py), col(underlay))
+        over(im, (x + px, y + py), (255, 255, 255, round(spec(px, py))))
+
+
+# ---------------------------------------------------------------- HUD (Liquid Glass Dock)
 def build_hotbar():
+    # No per-slot boxes: items float on the glass like Dock icons. Last row = floating shadow.
     im = Image.new('RGBA', (182, 22), (0, 0, 0, 0))
-    r = TOK['radius.hud']
-    rrect(im, 0, 0, 182, 22, r, col('hud.edge'))
-    rrect(im, 1, 1, 180, 20, r - 1, col('hud.fill'))
-    for i in range(9):
-        rrect(im, 2 + 20 * i, 2, 18, 18, TOK['radius.slot'], col('hud.cell'))
+    liquid_glass(im, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud')
     return im
 
 
 def build_selection():
+    # 24x23 sprite drawn at (slotX-1, hotbarY-1). Items can't be scaled by a resource pack, so the
+    # "magnified" Dock slot is expressed as a raised glass bubble: full sprite size (1px above the bar),
+    # brighter tint, and its own floating shadow on the bar's bottom row.
     im = Image.new('RGBA', (24, 23), (0, 0, 0, 0))
-    r = TOK['radius.hud']
-    rrect(im, 0, 0, 24, 23, r, col('hud.selection'))
-    rrect(im, 2, 2, 20, 19, r - 2, None, mode='clear')
+    liquid_glass(im, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
     return im
 
 
 def build_offhand(side):
     im = Image.new('RGBA', (29, 24), (0, 0, 0, 0))
-    x = 0 if side == 'left' else 7
-    r = TOK['radius.hud']
-    rrect(im, x, 1, 22, 22, r, col('hud.edge'))
-    rrect(im, x + 1, 2, 20, 20, r - 1, col('hud.fill'))
-    rrect(im, x + 2, 3, 18, 18, TOK['radius.slot'], col('hud.cell'))
+    liquid_glass(im, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud')
     return im
 
 
@@ -263,7 +309,6 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('VanillaAppleUI-Light-Rounded', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.3 · rounded buttons', TOK['radius.button'])
-    build_pack('VanillaAppleUI-Light-Pill', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.3 · pill buttons', TOK['radius.pill'])
+    rep = build_pack('VanillaAppleUI-Light', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.6', TOK['radius.button'])
     print(json.dumps({k: (v if k == 'glyph_pixels' else len(v)) for k, v in rep.items()}))
     print('slots', rep['slots']); print('wells', rep['wells'])

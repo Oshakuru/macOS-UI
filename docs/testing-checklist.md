@@ -19,4 +19,4 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 | Tooltips | Background and frame corners clean; text readable |
 
 ## Reporting
-Send a screenshot per issue, with the GUI scale and the variant (rounded or pill).
+Send a screenshot per issue, with the GUI scale.
