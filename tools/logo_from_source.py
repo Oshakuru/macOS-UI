@@ -1,6 +1,7 @@
 """Recover the native pixel grid of an upscaled pixel-art logo.
 
-Usage: python3 tools/logo_from_source.py design/logo/logo-source.png design/logo/logo-32.png preview-128.png
+Usage: python3 tools/logo_from_source.py design/logo/logo-source.png native.png preview.png
+(then trim and add a 1px margin -> design/logo/logo-icon.png)
 Finds the cell size/offset that makes each cell most uniform, samples cell centres, trims, and
 centres the result on a 32x32 canvas (build.py scales it x4 into pack.png).
 """

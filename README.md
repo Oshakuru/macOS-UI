@@ -49,7 +49,7 @@ All colours and radii live in [`design/tokens.json`](design/tokens.json). Change
 
 ```
 design/tokens.json        Design tokens: every colour and corner radius
-design/logo/              Pack logo: original artwork and the 32x32 pixel version used for pack.png
+design/logo/              Pack logo: original artwork (logo-source.png) and the native-pixel icon (logo-icon.png)
 tools/extract_vanilla.py  Pulls vanilla GUI reference assets out of the client jar
 tools/build.py            Generates the pack from tokens + vanilla geometry
 docs/                     Feasibility study, theme plan, decisions log, testing checklist
