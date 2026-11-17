@@ -87,5 +87,8 @@
 
 - **Hunger effect:** blue apples instead of green (user decision).
 
+## 0.13: sliders
+- The track stays dark (vanilla draws slider labels in white). The knob is grey `#AEAEB2` rather than white, because the label can sit over the knob. Hover: blue knob plus a blue track edge.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

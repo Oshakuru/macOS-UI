@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13 (2026-11-17), light prototype
+- **Sliders restyled:** the track is the same graphite pill as the buttons, with a blue edge on hover or focus. The handle is a rounded grey knob, inset so it stays inside the pill at 0% and 100%, and turns Apple blue on hover. Nine-slice borders follow the pill rule (top + bottom < height).
+
 ## 0.12 (2026-11-17), light prototype
 - Hunger-effect food icons are now **blue** (Apple-blue family) instead of green.
 

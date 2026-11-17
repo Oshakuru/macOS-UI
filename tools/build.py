@@ -519,6 +519,30 @@ def build_button(state, r):
     return im
 
 
+def build_slider_track(highlighted):
+    """200x20 slider track: same graphite pill as the buttons (vanilla draws the label in white).
+    Hover/focus adds an accent edge instead of a blue fill, so the label stays calm."""
+    r = TOK['radius.button']
+    im = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
+    rrect(im, 0, 0, 200, 20, r, col('accent.fill') if highlighted else col('control.edge'))
+    rrect(im, 1, 1, 198, 18, max(r - 1, 0), col('control.fill'))
+    hline(im, r, 1, 200 - 2 * r, col('control.top'))
+    return im
+
+
+def build_slider_knob(highlighted):
+    """8x20 slider handle: a 6x14 rounded knob inset inside the pill track (so at 0% / 100% it
+    stays inside the track's rounded ends); grey at rest, Apple blue on hover/drag."""
+    r = TOK['radius.knob'] - 1
+    im = Image.new('RGBA', (8, 20), (0, 0, 0, 0))
+    x, y, w, h = 1, 3, 6, 14
+    edge, fill, top = (('accent.edge', 'accent.fill', 'accent.top') if highlighted
+                       else ('knob.edge', 'knob.fill', 'knob.highlight'))
+    rrect(im, x, y, w, h, r, col(edge)); rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, col(fill))
+    hline(im, x + 2, y + 1, w - 4, col(top))
+    return im
+
+
 def nine(w, h, border):
     return {"gui": {"scaling": {"type": "nine_slice", "width": w, "height": h, "border": border}}}
 
@@ -589,7 +613,7 @@ def build_food(kind, palette):
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.12'   # single source for the pack title and the zip name
+VERSION = '0.13'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -729,6 +753,12 @@ def build_pack(name, desc, btn_r):
     border = btn_r if btn_r < 10 else {"left": btn_r, "right": btn_r, "top": 9, "bottom": 9}
     for st, fn in (('normal', 'button'), ('highlighted', 'button_highlighted'), ('disabled', 'button_disabled')):
         save(build_button(st, btn_r), root, f'sprites/widget/{fn}.png', nine(200, 20, border))
+    pill = {"left": TOK['radius.button'], "right": TOK['radius.button'], "top": 9, "bottom": 9}
+    save(build_slider_track(False), root, 'sprites/widget/slider.png', nine(200, 20, pill))
+    save(build_slider_track(True), root, 'sprites/widget/slider_highlighted.png', nine(200, 20, pill))
+    knob_border = {"left": 3, "right": 3, "top": 3, "bottom": 3}
+    save(build_slider_knob(False), root, 'sprites/widget/slider_handle.png', nine(8, 20, knob_border))
+    save(build_slider_knob(True), root, 'sprites/widget/slider_handle_highlighted.png', nine(8, 20, knob_border))
     bg, fr = build_tooltip()
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
