@@ -1,4 +1,4 @@
-<p align="center"><img src="design/logo/logo-source.png" width="160" alt="macOS UI logo"></p>
+<p align="center"><img src="design/logo/logo-source.png" width="160" alt="macUI logo"></p>
 
 # macUI
 
@@ -10,7 +10,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 
 ![Recipe book](docs/images/recipe-book-0.8.png)
 
-> **Status:** early prototype (0.20, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.21, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
@@ -25,7 +25,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.20.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macUI-Light-0.21.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
 
@@ -46,7 +46,7 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 
 ![Hotbar styles](docs/images/hotbar-styles-0.15.png)
 
-Without the mod, Minecraft ignores `respackopts.json5` and the `.rpo` files, and the defaults above apply. Alternative textures live in `assets/macos_ui/alt/`, which vanilla never loads.
+Without the mod, Minecraft ignores `respackopts.json5` and the `.rpo` files, and the defaults above apply. Alternative textures live in `assets/macui/alt/`, which vanilla never loads.
 
 ## Build from source
 

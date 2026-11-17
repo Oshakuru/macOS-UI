@@ -26,7 +26,7 @@ Phase 1 study for Minecraft Java 1.21.11, written 2026-11-17.
 
 ### 2.1 Pack metadata
 ```json
-{ "pack": { "description": "macOS UI", "min_format": [75, 0], "max_format": [75, 0] } }
+{ "pack": { "description": "macUI", "min_format": [75, 0], "max_format": [75, 0] } }
 ```
 
 ### 2.2 Four texture systems

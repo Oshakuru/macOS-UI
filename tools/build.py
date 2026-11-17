@@ -1,4 +1,4 @@
-"""Build the macOS UI resource pack from design tokens + the vanilla reference.
+"""Build the macUI resource pack from design tokens + the vanilla reference.
 
 Usage:
     python3 tools/extract_vanilla.py path/to/minecraft-1.21.11-client.jar   # once
@@ -605,7 +605,7 @@ def build_tooltip():
 
 
 def build_icon():
-    """pack.png: the macOS UI logo filling the icon (design/logo/logo-icon.png: native pixels with a
+    """pack.png: the macUI logo filling the icon (design/logo/logo-icon.png: native pixels with a
     1px margin), scaled by the largest whole factor that keeps it at least 128px."""
     logo = Image.open(os.path.join(REPO, 'design', 'logo', 'logo-icon.png')).convert('RGBA')
     k = max(1, -(-128 // logo.width))
@@ -659,9 +659,9 @@ def build_food(kind, palette):
 # display transform. oversized_in_gui lets the bigger item draw past its 16x16 slot (1.21.6+).
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
-NS = 'macos_ui'
+NS = 'macui'
 MAG_WRAPPERS = {}
-VERSION = '0.20'   # single source for the pack title and the zip name
+VERSION = '0.21'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -744,9 +744,9 @@ def build_magnification(root):
 # ---------------------------------------------------------------- optional in-game settings (Respackopts)
 # Bonus for players who install the Respackopts mod. Without the mod Minecraft ignores
 # respackopts.json5 and every .rpo file, so the pack behaves exactly as the defaults below.
-# Alternative files live in assets/macos_ui/alt/, which no vanilla loader reads.
+# Alternative files live in assets/macui/alt/, which no vanilla loader reads.
 RPO_CONF = {
-    'id': 'macosUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
+    'id': 'macUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
         'hud': {
             'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large']},
@@ -762,7 +762,7 @@ RPO_CONF = {
 }
 _L = {
     'en_us': {
-        '': 'macOS UI', 'hud': 'Hotbar and HUD',
+        '': 'macUI', 'hud': 'Hotbar and HUD',
         'hud.magnification': 'Magnify selected item', 'hud.magnification.off': '1.00× (off)',
         'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (default)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Glass bubble on selected slot',
@@ -776,7 +776,7 @@ _L = {
         'inventory': 'Inventory', 'inventory.glassPlayerArea': 'Glass behind player model',
     },
     'es_mx': {
-        '': 'macOS UI', 'hud': 'Barra rápida y HUD',
+        '': 'macUI', 'hud': 'Barra rápida y HUD',
         'hud.magnification': 'Ampliar objeto seleccionado', 'hud.magnification.off': '1.00× (desactivada)',
         'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (predeterminado)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Burbuja de cristal en la ranura seleccionada',
@@ -790,7 +790,7 @@ _L = {
         'inventory': 'Inventario', 'inventory.glassPlayerArea': 'Cristal detrás del jugador',
     },
 }
-RPO_LANG = {lang: {('rpo.macosUi' + ('.' + k if k else '')): v for k, v in d.items()} for lang, d in _L.items()}
+RPO_LANG = {lang: {('rpo.macUi' + ('.' + k if k else '')): v for k, v in d.items()} for lang, d in _L.items()}
 
 
 def _write_json(root, rel, data):
@@ -810,10 +810,10 @@ def _rpo(root, rel, condition, fallback=None):
 
 def build_options(root):
     gui = 'assets/minecraft/textures/gui/'
-    alt = 'assets/macos_ui/alt/'
+    alt = f'assets/{NS}/alt/'
     _write_json(root, 'respackopts.json5', RPO_CONF)
     for lang, entries in RPO_LANG.items():
-        _write_json(root, f'assets/macos_ui/lang/{lang}.json', entries)
+        _write_json(root, f'assets/{NS}/lang/{lang}.json', entries)
     n = 0
 
     # hud.magnification: off / 1.25 / 1.38 (default) / 1.50 -------------------------------------
@@ -979,5 +979,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack(f'macOS-UI-Light-{VERSION}', f'§fmacOS UI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
+    rep = build_pack(f'macUI-Light-{VERSION}', f'§fmacUI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
