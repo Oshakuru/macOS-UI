@@ -4,14 +4,17 @@ Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while stayi
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and a single blue accent.
 
-![Liquid Glass hotbar](docs/images/hotbar-0.5-liquid-glass.png)
+![Liquid Glass hotbar](docs/images/hotbar-0.8-hd.png)
 
-> **Status:** early prototype (0.7, light theme). Restyled so far: survival and creative inventories, recipe book button, hotbar, buttons, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+![Recipe book](docs/images/recipe-book-0.8.png)
+
+> **Status:** early prototype (0.8, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass hotbar with Dock-style magnification, buttons, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
 - **Vanilla only.** No Fabric, Forge, NeoForge, OptiFine, Iris, shaders or mods. Plain resource-pack textures and metadata.
 - **Gameplay untouched.** Slot positions, hitboxes and interactions are exactly vanilla.
+- **Item models:** the hotbar magnification wraps every vanilla item model definition (`assets/minecraft/items/*.json`). Packs that change item *textures* still work. Packs that replace item *model definitions* will conflict.
 - **Apple principles, not a macOS copy.** Material hierarchy, restraint, contrast and craft, translated into pixel art.
 - **Performance first.** Small textures and stretched (not tiled) nine-slice centres.
 

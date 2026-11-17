@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8 (2026-11-17), light prototype
+- **Hotbar magnification:** the selected item draws 1.25× larger, like the Dock. Done with vanilla item model definitions: each `items/*.json` is wrapped in a `minecraft:selected` + `display_context: gui` condition that points to a child model with a larger GUI transform, plus `oversized_in_gui`. 1,505 item definitions and 1,940 small wrapper models are generated.
+- **HD Liquid Glass hotbar:** the hotbar, selected-slot bubble and offhand are rendered at 4× texel density with smooth anti-aliased curves, a 0.75-px specular rim, an inner band and a soft shadow. Layout and size in game are unchanged.
+- **Recipe book restyled:**
+  - Light panel with a dark graphite recipe area (the page counter is white).
+  - Vertical tabs; the "craftable only" toggle is a blue pill with a white check when on.
+  - Chevron page arrows; recipe buttons as inset tiles, with red-edged dark tiles for uncraftable recipes and a stacked tile for multiple recipes.
+  - Popup panel and buttons.
+- **Text fields** (recipe search and every other text box): a dark rounded field, with a blue edge when focused.
+- **Creative scrollbar:** a thin 4-px rail and a 6-px thumb. The click area is unchanged.
+
 ## Unreleased
 - Renamed to **macOS UI**. The pack builds as `macOS-UI-Light.zip` and shows as "macOS UI — Light" in game.
 

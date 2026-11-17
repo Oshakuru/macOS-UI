@@ -17,6 +17,9 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 | Hotbar | Bar visible against the world; selection ring and stack counts readable; offhand on both sides |
 | Buttons | Normal, hover (blue) and disabled; short buttons ("Done") and wide buttons; no seams when stretched |
 | Tooltips | Background and frame corners clean; text readable |
+| Recipe book | Tabs, search field (typing, focus edge), craftable toggle on/off, page arrows, craftable/uncraftable/multiple recipe tiles, alternatives popup |
+| Magnification | Selected hotbar item is bigger; scrolling between slots; blocks, flat items, compass/clock, shields, banners, heads, chests; inventory hotbar row |
+| Creative | Tabs, search, destroy-item slot, thin scrollbar drags correctly |
 
 ## Reporting
 Send a screenshot per issue, with the GUI scale.

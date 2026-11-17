@@ -60,5 +60,12 @@
 ## Name
 - **"macOS UI" is the official pack name** (user decision, 2026-11-17). Pack zip: `macOS-UI-Light.zip`; in-game title: "macOS UI — Light".
 
+## 0.8: HD HUD, magnification, recipe book
+- **In-game feedback (0.7):** the 1× Liquid Glass hotbar looked chunky ("not slick"); the recipe book screen was still vanilla; the creative scrollbar was too thick; magnification was requested again.
+- **HD for the HUD:** GUI sprites render at their logical size whatever their resolution, so the hotbar sprites are now 4× (e.g. `hotbar.png` 728×88) and drawn with a signed-distance-field renderer. **Open question:** move every panel to HD for consistency?
+- **Magnification is possible after all:** the client item model definition condition `minecraft:selected` is true when the item is selected on the hotbar, and `oversized_in_gui` (1.21.6+) lets the bigger model draw past the slot. Selected items in the GUI display context use a child model whose `display.gui.scale` is ×1.25 (`magnify.scale` token).
+  - **Side effects to check in game:** the selected item probably also appears magnified in the inventory's hotbar row. Packs that replace `items/*.json` will conflict with ours. Item textures from other packs still work.
+- **Recipe book:** the recipe area stays dark because vanilla draws the page counter in white. Text fields are dark for the same reason.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

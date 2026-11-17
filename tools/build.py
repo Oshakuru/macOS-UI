@@ -9,7 +9,7 @@ Produces the pack as a folder and a zip in dist/.
 Every colour and radius comes from design/tokens.json.
 """
 import json, math, os, shutil, sys, zipfile
-from collections import deque
+from collections import Counter, deque
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -138,7 +138,10 @@ def repaint_container(path):
                                  tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False)
                     report['wells'].append((fx, fy, fw, fh))
                 elif max(w, h) > 40:
-                    well(out, fx, fy, fw, fh, r=TOK['radius.track']); report['slots'].append((fx, fy, fw, fh))
+                    # scroll track: thin centred rail; the vanilla hit area is unchanged
+                    tw = TOK['scroll.track_width']
+                    rrect(out, fx + (fw - tw) // 2, fy + 1, tw, fh - 2, tw // 2, col('scroll.track'))
+                    report['slots'].append((fx, fy, fw, fh))
                 else:
                     well(out, fx, fy, fw, fh); report['slots'].append((fx, fy, fw, fh))
             elif rgb == (0x8B, 0x8B, 0x8B) and n >= 200:
@@ -206,13 +209,134 @@ def build_recipe_button(highlighted):
     return im
 
 
-def build_scroller(disabled):
-    im = Image.new('RGBA', (12, 15), (0, 0, 0, 0))
-    if disabled:
-        rrect(im, 0, 0, 12, 15, 4, col('scroller.disabled'))
+# ---------------------------------------------------------------- recipe book
+def icon_pixels(src, bg_colours, margin=2):
+    """Pixels of the vanilla artwork that are neither background nor the bevel/outline frame."""
+    w, h = src.size
+    out = []
+    for yy in range(margin, h - margin):
+        for xx in range(margin, w - margin):
+            p = src.getpixel((xx, yy))
+            if p[3] and p[:3] not in bg_colours:
+                out.append(((xx, yy), p))
+    return out
+
+
+def build_recipe_book_panel():
+    """recipe_book.png: light panel; the recipe area stays dark (vanilla draws the page counter in
+    white) as a graphite rounded well; the blue magnifier glyph is kept."""
+    src = Image.open(os.path.join(VAN, 'recipe_book.png')).convert('RGBA')
+    out = Image.new('RGBA', src.size, (0, 0, 0, 0))
+    x0, y0, x1, y1 = src.getchannel('A').getbbox()
+    panel_box(out, x0, y0, x1 - x0, y1 - y0)
+    comp = max(components(src, (0x37, 0x37, 0x37)), key=lambda c: c[4])
+    cx, cy, cw, ch = comp[:4]
+    rrect(out, cx, cy, cw, ch, TOK['radius.glass'], col('recipe.area'))
+    neutral = {(0x37, 0x37, 0x37), (0xC6, 0xC6, 0xC6), (0, 0, 0), (0xFF, 0xFF, 0xFF), (0x55, 0x55, 0x55), (0x8B, 0x8B, 0x8B)}
+    for (xy, p) in icon_pixels(src.crop((cx, cy, cx + cw, cy + ch)), neutral, margin=0):
+        out.putpixel((xy[0] + cx, xy[1] + cy), p)
+    return out
+
+
+def build_recipe_tab(selected):
+    """35x27 vertical tab on the left of the recipe book; the selected tab merges into the panel."""
+    w = 35 if selected else 30
+    im = Image.new('RGBA', (35, 27), (0, 0, 0, 0))
+    r = TOK['radius.tab']
+    fill = col('panel.fill') if selected else col('tab.unselected')
+    box = Image.new('RGBA', (w + r, 26), (0, 0, 0, 0))
+    rrect(box, 0, 0, w + r, 26, r, col('panel.edge'))
+    rrect(box, 1, 1, w + r - 2, 24, r - 1, fill)
+    box = box.crop((0, 0, w, 26))
+    if selected:
+        for yy in range(1, 25):
+            for xx in range(w - 3, w):
+                box.putpixel((xx, yy), fill)
+    im.alpha_composite(box, (0, 0))
+    return im
+
+
+def build_filter(path, enabled, highlighted):
+    """26x16 'craftable only' toggle: on = accent pill with a white check, off = light tile.
+    The vanilla icon (crafting table / furnace) is kept."""
+    src = Image.open(path).convert('RGBA')
+    bg = Counter(src.get_flattened_data()).most_common(1)[0][0][:3]
+    im = Image.new('RGBA', src.size, (0, 0, 0, 0))
+    r = 4
+    edge = col('accent.edge') if (enabled or highlighted) else col('panel.edge')
+    if highlighted and not enabled:
+        edge = col('accent.fill')
+    rrect(im, 0, 0, 26, 16, r, edge)
+    rrect(im, 1, 1, 24, 14, r - 1, col('accent.fill') if enabled else col('slot.tile'))
+    skip = {bg, (0, 0, 0), (0xFF, 0xFF, 0xFF), (0x8B, 0x8B, 0x8B), (0x88, 0x92, 0xC9), (0x44, 0x49, 0x64), (0x0E, 0x27, 0x25), (0x21, 0x87, 0x56)}
+    for (xy, p) in icon_pixels(src, skip):
+        if enabled and p[1] > p[0] + 30 and p[1] > p[2] + 20:   # green check -> white
+            p = (255, 255, 255, 255)
+        im.putpixel(xy, p)
+    return im
+
+
+def build_chevron(forward, highlighted):
+    im = Image.new('RGBA', (12, 17), (0, 0, 0, 0))
+    c = col('accent.fill') if highlighted else col('chevron')
+    pts = [(3 + i, 3 + i) for i in range(6)] + [(8 - i, 9 + i) for i in range(5)]
+    for (xx, yy) in pts:
+        for d in (0, 1):
+            x2 = xx + d if forward else 11 - xx - d
+            im.putpixel((x2, yy), c)
+    return im
+
+
+def build_recipe_slot(craftable, many):
+    """25x25 recipe button on the dark recipe area. Buttons sit on a 25-px pitch, so the tile is
+    inset to 21x21 to leave a gap; 'many' recipes show a second tile peeking out behind."""
+    im = Image.new('RGBA', (25, 25), (0, 0, 0, 0))
+    r = 3
+    x, y, w, h = 2, 2, 21, 21
+    if many:
+        rrect(im, 4, 4, 20, 20, r, col('recipe.stack'))
+        x, y, w, h = 1, 1, 20, 20
+    if craftable:
+        rrect(im, x, y, w, h, r, col('slot.tile'))
     else:
-        rrect(im, 0, 0, 12, 15, 4, col('scroller.edge'))
-        rrect(im, 1, 1, 10, 13, 3, col('scroller.fill'))
+        rrect(im, x, y, w, h, r, col('danger.glyph'))
+        rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, col('recipe.uncraftable'))
+    return im
+
+
+def build_overlay_button(state):
+    """24x24 buttons inside the recipe alternatives popup."""
+    im = Image.new('RGBA', (24, 24), (0, 0, 0, 0))
+    if state == 'highlighted':
+        rrect(im, 0, 0, 24, 24, 3, col('accent.fill')); rrect(im, 1, 1, 22, 22, 2, col('slot.tile'))
+    elif state == 'disabled':
+        rrect(im, 0, 0, 24, 24, 3, col('danger.tile'))
+    elif state == 'disabled_highlighted':
+        rrect(im, 0, 0, 24, 24, 3, col('accent.fill')); rrect(im, 1, 1, 22, 22, 2, col('danger.tile'))
+    else:
+        rrect(im, 0, 0, 24, 24, 3, col('slot.tile'))
+    return im
+
+
+def build_popup():
+    im = Image.new('RGBA', (32, 32), (0, 0, 0, 0))
+    rrect(im, 0, 0, 32, 32, 4, col('panel.edge')); rrect(im, 1, 1, 30, 30, 3, col('panel.fill'))
+    return im
+
+
+def build_text_field(focused):
+    """Dark field (vanilla draws field text in white); focus = accent edge."""
+    im = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
+    rrect(im, 0, 0, 200, 20, 3, col('accent.fill') if focused else col('field.edge'))
+    rrect(im, 1, 1, 198, 18, 2, col('control.fill'))
+    return im
+
+
+def build_scroller(disabled):
+    """12x15 scroller sprite: a thin centred pill (the game still uses the full 12px for dragging)."""
+    im = Image.new('RGBA', (12, 15), (0, 0, 0, 0))
+    tw = TOK['scroll.thumb_width']
+    rrect(im, (12 - tw) // 2, 0, tw, 15, tw // 2, col('scroller.disabled' if disabled else 'scroller.fill'))
     return im
 
 
@@ -291,27 +415,87 @@ def liquid_glass(im, x, y, w, h, r, underlay=None, tint=None, tint_bottom=None, 
         over(im, (x + px, y + py), (255, 255, 255, round(spec(px, py))))
 
 
-# ---------------------------------------------------------------- HUD (Liquid Glass Dock)
+# ---------------------------------------------------------------- HD Liquid Glass (HUD)
+# GUI sprites are drawn at a fixed logical size, so a texture with more texels per logical pixel
+# renders smoothly (anti-aliased curves, sub-pixel rims) without changing layout. The HUD uses
+# hd.scale texels per logical pixel.
+import numpy as np
+
+
+def _rgba(name):
+    return np.array(col(name), dtype=np.float64) / 255.0
+
+
+def _over(dst, rgb, a):
+    """Vectorised 'source over' of a colour with per-pixel alpha onto an RGBA float image."""
+    a = np.clip(a, 0, 1)[..., None]
+    da = dst[..., 3:4]
+    oa = a + da * (1 - a)
+    out_rgb = np.where(oa > 0, (np.asarray(rgb)[None, None, :3] * a + dst[..., :3] * da * (1 - a)) / np.maximum(oa, 1e-9), 0)
+    dst[..., :3] = out_rgb
+    dst[..., 3:4] = oa
+
+
+def _sdf(px, py, cx, cy, hw, hh, r):
+    qx = np.abs(px - cx) - (hw - r)
+    qy = np.abs(py - cy) - (hh - r)
+    ox, oy = np.maximum(qx, 0), np.maximum(qy, 0)
+    d = np.hypot(ox, oy) + np.minimum(np.maximum(qx, qy), 0) - r
+    # outward normal
+    nx = np.where(qx > qy, np.sign(px - cx), 0.0)
+    ny = np.where(qy >= qx, np.sign(py - cy), 0.0)
+    corner = (qx > 0) & (qy > 0)
+    ln = np.maximum(np.hypot(ox, oy), 1e-9)
+    nx = np.where(corner, np.sign(px - cx) * ox / ln, nx)
+    ny = np.where(corner, np.sign(py - cy) * oy / ln, ny)
+    return d, nx, ny
+
+
+def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True):
+    """Liquid Glass rendered with an SDF at hd.scale: clear body, angle-dependent specular rim,
+    inner lensing band and a soft floating shadow. Returns a PIL image of W*s x H*s texels."""
+    s = TOK['hd.scale']
+    ys, xs = np.mgrid[0:H * s, 0:W * s]
+    px, py = (xs + 0.5) / s, (ys + 0.5) / s                      # logical coordinates
+    img = np.zeros((H * s, W * s, 4))
+    if shadow:
+        h -= TOK['liquid.shadow_offset']
+    cx, cy, hw, hh = x + w / 2, y + h / 2, w / 2, h / 2
+    d, nx, ny = _sdf(px, py, cx, cy, hw, hh, r)
+    cov = np.clip(0.5 - d * s, 0, 1)                             # anti-aliased coverage
+    if shadow:
+        ds, _, _ = _sdf(px, py, cx, cy + TOK['liquid.shadow_offset'], hw, hh, r)
+        sh = _rgba('liquid.shadow')
+        _over(img, sh, sh[3] * np.clip(1 - (ds + 0.6) / 1.2, 0, 1) * (1 - cov))
+    rim_w, band_w = TOK['liquid.rim_width'], TOK['liquid.band_width']
+    if underlay:
+        u = _rgba(underlay); _over(img, u, u[3] * cov)
+    t = _rgba(tint or 'liquid.tint'); _over(img, t, t[3] * cov)
+    key = np.maximum(0, -0.707 * nx - 0.707 * ny)
+    echo = 0.55 * np.maximum(0, 0.707 * nx + 0.707 * ny)
+    lo, hi = TOK['liquid.rim_min'] / 255, TOK['liquid.rim_max'] / 255
+    spec = lo + (hi - lo) * np.maximum(key, echo) ** 1.6
+    band = np.clip((d + rim_w + band_w) * s, 0, 1) * np.clip((-d - rim_w) * s + 1, 0, 1) * cov
+    band *= np.clip((d + rim_w + band_w) / band_w, 0, 1)          # fade inward
+    _over(img, (1, 1, 1), spec * TOK['liquid.band'] * band)
+    rim = np.clip((d + rim_w) * s + 0.5, 0, 1) * cov
+    _over(img, (1, 1, 1), spec * rim)
+    return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
+
+
 def build_hotbar():
-    # No per-slot boxes: items float on the glass like Dock icons. Last row = floating shadow.
-    im = Image.new('RGBA', (182, 22), (0, 0, 0, 0))
-    liquid_glass(im, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud')
-    return im
+    # Items float on the glass like Dock icons; no per-slot boxes.
+    return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud')
 
 
 def build_selection():
-    # 24x23 sprite drawn at (slotX-1, hotbarY-1). Items can't be scaled by a resource pack, so the
-    # "magnified" Dock slot is expressed as a raised glass bubble: full sprite size (1px above the bar),
-    # brighter tint, and its own floating shadow on the bar's bottom row.
-    im = Image.new('RGBA', (24, 23), (0, 0, 0, 0))
-    liquid_glass(im, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
-    return im
+    # 24x23 sprite at (slotX-1, hotbarY-1): raised glass bubble (item magnification itself comes
+    # from the item model definitions, see build_magnification()).
+    return liquid_glass_hd(24, 23, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
 
 
 def build_offhand(side):
-    im = Image.new('RGBA', (29, 24), (0, 0, 0, 0))
-    liquid_glass(im, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud')
-    return im
+    return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud')
 
 
 def build_highlight(which):
@@ -356,6 +540,89 @@ def build_icon():
     return im.resize((128, 128), Image.NEAREST)
 
 
+# ---------------------------------------------------------------- hotbar magnification
+# Dock-style magnification of the selected hotbar item, done entirely with vanilla item model
+# definitions (1.21.4+): every assets/minecraft/items/*.json is wrapped in
+#   condition minecraft:selected -> select minecraft:display_context == gui -> magnified model
+# where each magnified model is a one-line child of the original model with a larger "gui"
+# display transform. oversized_in_gui lets the bigger item draw past its 16x16 slot (1.21.6+).
+MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
+ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
+NS = 'macos_ui'
+
+
+def _model_json(mid):
+    ns, path = (mid.split(':', 1) + [None])[:2] if ':' in mid else ('minecraft', mid)
+    if ns != 'minecraft':
+        return None
+    f = os.path.join(MODELS, path + '.json')
+    return json.load(open(f)) if os.path.exists(f) else None
+
+
+def _gui_transform(mid, depth=0):
+    m = _model_json(mid)
+    if m is None or depth > 20:
+        return None
+    if 'display' in m and 'gui' in m['display']:
+        return m['display']['gui']
+    return _gui_transform(m['parent'], depth + 1) if 'parent' in m else None
+
+
+def _magnified_id(mid, wrappers):
+    full = mid if ':' in mid else 'minecraft:' + mid
+    ns, path = full.split(':', 1)
+    wid = f'{NS}:magnified/{ns}/{path}'
+    if wid not in wrappers:
+        g = _gui_transform(full) or {}
+        k = TOK['magnify.scale']
+        scale = [round(v * k, 4) for v in g.get('scale', [1, 1, 1])]
+        gui = {'rotation': g.get('rotation', [0, 0, 0]), 'translation': g.get('translation', [0, 0, 0]), 'scale': scale}
+        wrappers[wid] = {'parent': full, 'display': {'gui': gui}}
+    return wid
+
+
+def _magnify_tree(node, wrappers):
+    if isinstance(node, list):
+        return [_magnify_tree(n, wrappers) for n in node]
+    if not isinstance(node, dict):
+        return node
+    out = {}
+    for k, v in node.items():
+        if k in ('model', 'base') and isinstance(v, str):
+            out[k] = _magnified_id(v, wrappers)
+        else:
+            out[k] = _magnify_tree(v, wrappers)
+    return out
+
+
+def build_magnification(root):
+    wrappers = {}
+    n = 0
+    for f in sorted(os.listdir(ITEMS)):
+        if not f.endswith('.json'):
+            continue
+        d = json.load(open(os.path.join(ITEMS, f)))
+        orig = d['model']
+        d['model'] = {
+            'type': 'minecraft:condition', 'property': 'minecraft:selected',
+            'on_false': orig,
+            'on_true': {'type': 'minecraft:select', 'property': 'minecraft:display_context',
+                        'cases': [{'when': 'gui', 'model': _magnify_tree(orig, wrappers)}],
+                        'fallback': orig},
+        }
+        d['oversized_in_gui'] = True
+        dest = os.path.join(root, 'assets', 'minecraft', 'items', f)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        json.dump(d, open(dest, 'w'), separators=(',', ':'))
+        n += 1
+    for wid, m in wrappers.items():
+        path = wid.split(':', 1)[1]
+        dest = os.path.join(root, 'assets', NS, 'models', path + '.json')
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        json.dump(m, open(dest, 'w'), separators=(',', ':'))
+    return n, len(wrappers)
+
+
 # ---------------------------------------------------------------- assemble
 def save(im, root, rel, meta=None):
     p = os.path.join(root, 'assets', 'minecraft', 'textures', 'gui', rel)
@@ -382,6 +649,27 @@ def build_pack(name, desc, btn_r):
             for i in range(1, 8):
                 tab_file = f"tab_{'top' if top else 'bottom'}_{'selected' if sel else 'unselected'}_{i}.png"
                 save(build_tab(i, sel, top, i), root, "sprites/container/creative_inventory/" + tab_file)
+    save(build_recipe_book_panel(), root, 'recipe_book.png')
+    save(build_recipe_tab(False), root, 'sprites/recipe_book/tab.png')
+    save(build_recipe_tab(True), root, 'sprites/recipe_book/tab_selected.png')
+    for fam in ('filter', 'furnace_filter'):
+        for en in ('enabled', 'disabled'):
+            for hl in ('', '_highlighted'):
+                n = f'{fam}_{en}{hl}'
+                save(build_filter(os.path.join(VAN, 'sprites', 'recipe_book', n + '.png'), en == 'enabled', bool(hl)),
+                     root, f'sprites/recipe_book/{n}.png')
+    for fw in (True, False):
+        for hl in (False, True):
+            save(build_chevron(fw, hl), root, f"sprites/recipe_book/page_{'forward' if fw else 'backward'}{'_highlighted' if hl else ''}.png")
+    for cr in (True, False):
+        for many in (False, True):
+            save(build_recipe_slot(cr, many), root, f"sprites/recipe_book/slot_{'many_' if many else ''}{'craftable' if cr else 'uncraftable'}.png")
+    for fam in ('crafting_overlay', 'furnace_overlay'):
+        for st, suf in (('normal', ''), ('highlighted', '_highlighted'), ('disabled', '_disabled'), ('disabled_highlighted', '_disabled_highlighted')):
+            save(build_overlay_button(st), root, f'sprites/recipe_book/{fam}{suf}.png')
+    save(build_popup(), root, 'sprites/recipe_book/overlay_recipe.png', nine(32, 32, 4))
+    save(build_text_field(False), root, 'sprites/widget/text_field.png', nine(200, 20, 3))
+    save(build_text_field(True), root, 'sprites/widget/text_field_highlighted.png', nine(200, 20, 3))
     save(build_recipe_button(False), root, 'sprites/recipe_book/button.png')
     save(build_recipe_button(True), root, 'sprites/recipe_book/button_highlighted.png')
     save(build_scroller(False), root, 'sprites/container/creative_inventory/scroller.png')
@@ -401,6 +689,7 @@ def build_pack(name, desc, btn_r):
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
+    report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
     z = os.path.join(OUT, name + '.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
         for d, _, fs in os.walk(root):
@@ -411,5 +700,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.7', TOK['radius.button'])
+    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.8', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
