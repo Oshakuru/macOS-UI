@@ -23,5 +23,11 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 | Magnification | Selected hotbar item is bigger; scrolling between slots; blocks, flat items, compass/clock, shields, banners, heads, chests; inventory hotbar row |
 | Creative | Tabs, search, destroy-item slot, thin scrollbar drags correctly |
 
+## Respackopts (optional)
+Test once **without** the mod (everything must look like the defaults), then with Respackopts and LibJF installed:
+- [ ] The settings button appears next to the pack, with the labels translated.
+- [ ] Each setting switches correctly after the resource reload: magnification, hotbar outline, food icons, button shape (buttons and sliders), glass player area (survival and creative).
+- [ ] No errors in `latest.log` (use `/rpoc dump scope` if a condition misbehaves).
+
 ## Reporting
 Send a screenshot per issue, with the GUI scale.

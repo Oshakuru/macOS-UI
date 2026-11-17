@@ -10,7 +10,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 
 ![Recipe book](docs/images/recipe-book-0.8.png)
 
-> **Status:** early prototype (0.13, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.14, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
@@ -25,9 +25,23 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.13.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.14.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
+
+## Optional: in-game settings (Respackopts)
+
+The pack works on plain vanilla Minecraft. Players who also install the [Respackopts](https://modrinth.com/mod/respackopts) mod (Fabric/NeoForge, plus its LibJF dependency) get a settings button next to the pack in the resource pack screen:
+
+| Setting | Default | Options |
+|---|---|---|
+| Magnify selected item | On | On / off |
+| Glass outline on hotbar | Off | On / off |
+| Food icons | Silver apples | Silver apples / vanilla |
+| Button shape | Pill | Pill / rounded rectangle |
+| Glass behind player model | On | On / off (opaque tile) |
+
+Without the mod, Minecraft ignores `respackopts.json5` and the `.rpo` files, and the defaults above apply. Alternative textures live in `assets/macos_ui/alt/`, which vanilla never loads.
 
 ## Build from source
 

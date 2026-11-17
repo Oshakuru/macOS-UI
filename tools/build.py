@@ -105,7 +105,7 @@ def is_framed(im, x, y, w, h):
     return top and left and bot and right
 
 
-def repaint_container(path):
+def repaint_container(path, glass=True):
     """Generic container restyle: keeps the vanilla canvas, panel bounds and every slot position.
     - panel bounds -> rounded light panel
     - framed #8B8B8B areas (slots, scroll tracks) -> flat tiles
@@ -134,8 +134,11 @@ def repaint_container(path):
             elif n == w * h and framed:
                 fx, fy, fw, fh = x - 1, y - 1, w + 2, h + 2
                 if rgb == (0, 0, 0):
-                    liquid_glass(out, fx, fy, fw, fh, TOK['radius.glass'], tint='liquid.well_tint_top',
-                                 tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False)
+                    if not glass:
+                        well(out, fx, fy, fw, fh, r=TOK['radius.glass'])
+                    else:
+                        liquid_glass(out, fx, fy, fw, fh, TOK['radius.glass'], tint='liquid.well_tint_top',
+                                     tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False)
                     report['wells'].append((fx, fy, fw, fh))
                 elif max(w, h) > 40:
                     # scroll track: thin centred rail; the vanilla hit area is unchanged
@@ -153,8 +156,8 @@ def repaint_container(path):
     return out, report
 
 
-def build_inventory():
-    return repaint_container(os.path.join(VAN, 'container', 'inventory.png'))
+def build_inventory(glass=True):
+    return repaint_container(os.path.join(VAN, 'container', 'inventory.png'), glass)
 
 
 # ---------------------------------------------------------------- creative tabs + scroller
@@ -484,12 +487,12 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, 
     return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
 
 
-def build_hotbar():
+def build_hotbar(rim=False):
     # Items float on the glass like Dock icons; no per-slot boxes.
     # 0.8 test: a 4x hotbar (728x88) showed the missing texture in game while the 4x selection and
     # offhand worked; the hotbar is the only HUD sprite wider than 512 texels, so it uses 2x (364x44).
     return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud',
-                           scale=TOK['hd.scale_hotbar'], rim=False)
+                           scale=TOK['hd.scale_hotbar'], rim=rim)
 
 
 def build_selection():
@@ -498,9 +501,9 @@ def build_selection():
     return Image.new('RGBA', (24, 23), (0, 0, 0, 0))
 
 
-def build_offhand(side):
+def build_offhand(side, rim=False):
     return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud',
-                           rim=False)
+                           rim=rim)
 
 
 def build_highlight(which):
@@ -519,10 +522,10 @@ def build_button(state, r):
     return im
 
 
-def build_slider_track(highlighted):
+def build_slider_track(highlighted, r=None):
     """200x20 slider track: same graphite pill as the buttons (vanilla draws the label in white).
     Hover/focus adds an accent edge instead of a blue fill, so the label stays calm."""
-    r = TOK['radius.button']
+    r = r or TOK['radius.button']
     im = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
     rrect(im, 0, 0, 200, 20, r, col('accent.fill') if highlighted else col('control.edge'))
     rrect(im, 1, 1, 198, 18, max(r - 1, 0), col('control.fill'))
@@ -613,7 +616,7 @@ def build_food(kind, palette):
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.13'   # single source for the pack title and the zip name
+VERSION = '0.14'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -688,7 +691,115 @@ def build_magnification(root):
     return n, len(wrappers)
 
 
+# ---------------------------------------------------------------- optional in-game settings (Respackopts)
+# Bonus for players who install the Respackopts mod. Without the mod Minecraft ignores
+# respackopts.json5 and every .rpo file, so the pack behaves exactly as the defaults below.
+# Alternative files live in assets/macos_ui/alt/, which no vanilla loader reads.
+RPO_CONF = {
+    'id': 'macosUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter'],
+    'conf': {
+        'hud': {'magnification': True, 'hotbarOutline': False, 'foodIcons': ['silverApples', 'vanilla']},
+        'widgets': {'buttonShape': ['pill', 'rounded']},
+        'inventory': {'glassPlayerArea': True},
+    },
+}
+RPO_LANG = {
+    'en_us': {
+        'rpo.macosUi': 'macOS UI',
+        'rpo.macosUi.hud': 'Hotbar and HUD',
+        'rpo.macosUi.hud.magnification': 'Magnify selected item',
+        'rpo.macosUi.hud.hotbarOutline': 'Glass outline on hotbar',
+        'rpo.macosUi.hud.foodIcons': 'Food icons',
+        'rpo.macosUi.hud.foodIcons.silverApples': 'Silver apples',
+        'rpo.macosUi.hud.foodIcons.vanilla': 'Vanilla',
+        'rpo.macosUi.widgets': 'Buttons and sliders',
+        'rpo.macosUi.widgets.buttonShape': 'Button shape',
+        'rpo.macosUi.widgets.buttonShape.pill': 'Pill',
+        'rpo.macosUi.widgets.buttonShape.rounded': 'Rounded rectangle',
+        'rpo.macosUi.inventory': 'Inventory',
+        'rpo.macosUi.inventory.glassPlayerArea': 'Glass behind player model',
+    },
+    'es_mx': {
+        'rpo.macosUi': 'macOS UI',
+        'rpo.macosUi.hud': 'Barra rápida y HUD',
+        'rpo.macosUi.hud.magnification': 'Ampliar objeto seleccionado',
+        'rpo.macosUi.hud.hotbarOutline': 'Borde de cristal en la barra',
+        'rpo.macosUi.hud.foodIcons': 'Iconos de comida',
+        'rpo.macosUi.hud.foodIcons.silverApples': 'Manzanas plateadas',
+        'rpo.macosUi.hud.foodIcons.vanilla': 'Vanilla',
+        'rpo.macosUi.widgets': 'Botones y deslizadores',
+        'rpo.macosUi.widgets.buttonShape': 'Forma de botones',
+        'rpo.macosUi.widgets.buttonShape.pill': 'Píldora',
+        'rpo.macosUi.widgets.buttonShape.rounded': 'Rectángulo redondeado',
+        'rpo.macosUi.inventory': 'Inventario',
+        'rpo.macosUi.inventory.glassPlayerArea': 'Cristal detrás del jugador',
+    },
+}
+
+
+def _write_json(root, rel, data):
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w', encoding='utf-8') as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+
+
+def _rpo(root, rel, condition, fallback=None):
+    """Write <rel>.rpo (or <dir>/.rpo when rel ends with '/')."""
+    data = {'condition': condition}
+    if fallback:
+        data['fallback'] = fallback
+    _write_json(root, rel + '.rpo' if not rel.endswith('/') else rel + '.rpo', data)
+
+
+def build_options(root):
+    gui = 'assets/minecraft/textures/gui/'
+    alt = 'assets/macos_ui/alt/'
+    _write_json(root, 'respackopts.json5', RPO_CONF)
+    for lang, entries in RPO_LANG.items():
+        _write_json(root, f'assets/macos_ui/lang/{lang}.json', entries)
+    n = 0
+    # hud.magnification: drop the whole items/ override when off
+    _rpo(root, 'assets/minecraft/items/', 'hud.magnification'); n += 1
+    # hud.hotbarOutline: swap to glass-with-rim versions when on
+    for rel, im in (('sprites/hud/hotbar.png', build_hotbar(rim=True)),
+                    ('sprites/hud/hotbar_offhand_left.png', build_offhand('left', rim=True)),
+                    ('sprites/hud/hotbar_offhand_right.png', build_offhand('right', rim=True))):
+        save_at(im, root, alt + 'outline/' + rel)
+        _rpo(root, gui + rel, '!hud.hotbarOutline', alt + 'outline/' + rel); n += 1
+    # hud.foodIcons: remove our food sprites to fall back to vanilla
+    for kind in ('full', 'half', 'empty'):
+        for suf in ('', '_hunger'):
+            _rpo(root, gui + f'sprites/hud/food_{kind}{suf}.png', 'hud.foodIcons.silverApples'); n += 1
+    # widgets.buttonShape: rounded-rectangle alternatives (texture + nine-slice metadata)
+    rr = 5
+    for st, fn in (('normal', 'button'), ('highlighted', 'button_highlighted'), ('disabled', 'button_disabled')):
+        save_at(build_button(st, rr), root, alt + f'rounded/sprites/widget/{fn}.png', nine(200, 20, rr))
+    save_at(build_slider_track(False, rr), root, alt + 'rounded/sprites/widget/slider.png', nine(200, 20, rr))
+    save_at(build_slider_track(True, rr), root, alt + 'rounded/sprites/widget/slider_highlighted.png', nine(200, 20, rr))
+    for fn in ('button', 'button_highlighted', 'button_disabled', 'slider', 'slider_highlighted'):
+        for ext in ('.png', '.png.mcmeta'):
+            rel = f'sprites/widget/{fn}{ext}'
+            _rpo(root, gui + rel, 'widgets.buttonShape.pill', alt + 'rounded/' + rel); n += 1
+    # inventory.glassPlayerArea: opaque tile instead of glass when off
+    inv, _ = build_inventory(glass=False)
+    tab, _ = repaint_container(os.path.join(VAN, 'container', 'creative_inventory', 'tab_inventory.png'), glass=False)
+    for rel, im in (('container/inventory.png', inv), ('container/creative_inventory/tab_inventory.png', tab)):
+        save_at(im, root, alt + 'opaque/' + rel)
+        _rpo(root, gui + rel, 'inventory.glassPlayerArea', alt + 'opaque/' + rel); n += 1
+    return n
+
+
 # ---------------------------------------------------------------- assemble
+def save_at(im, root, rel, meta=None):
+    """Save to an explicit path relative to the pack root (used for alternative files)."""
+    p = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    im.save(p)
+    if meta is not None:
+        json.dump(meta, open(p + '.mcmeta', 'w'), indent=2)
+
+
 def save(im, root, rel, meta=None):
     p = os.path.join(root, 'assets', 'minecraft', 'textures', 'gui', rel)
     os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -763,6 +874,7 @@ def build_pack(name, desc, btn_r):
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
+    report['rpo_files'] = build_options(root)
     report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
     z = os.path.join(OUT, name + '.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:

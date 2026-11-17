@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.14 (2026-11-17), light prototype
+- **Optional in-game settings with Respackopts** (bonus for players who use the mod; vanilla behaviour unchanged): magnification on/off, glass outline on the hotbar, silver-apple or vanilla food icons, pill or rounded-rectangle buttons and sliders, and glass or opaque player area. Menu labels are in English and Spanish (Mexico).
+
 ## 0.13 (2026-11-17), light prototype
 - **Sliders restyled:** the track is the same graphite pill as the buttons, with a blue edge on hover or focus. The handle is a rounded grey knob, inset so it stays inside the pill at 0% and 100%, and turns Apple blue on hover. Nine-slice borders follow the pill rule (top + bottom < height).
 
