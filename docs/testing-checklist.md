@@ -26,7 +26,7 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 ## Respackopts (optional)
 Test once **without** the mod (everything must look like the defaults), then with Respackopts and LibJF installed:
 - [ ] The settings button appears next to the pack, with the labels translated.
-- [ ] Each setting switches correctly after the resource reload: magnification slider (1.00 off, 1.10, 1.20, 1.30, 1.38, 1.50), selection bubble, hotbar style (dock/shelf), hotbar opacity (four levels), hotbar outline, food icons, button shape (buttons and sliders), glass player area (survival and creative).
+- [ ] Each setting switches correctly after the resource reload: magnification (1.00 off, 1.25, 1.38, 1.50), selection bubble, hotbar style (dock/shelf), hotbar opacity (four levels), hotbar outline, food icons, button shape (buttons and sliders), glass player area (survival and creative).
 - [ ] Combinations: shelf + solid + outline, dock + frosted + bubble, magnification 1.50 + bubble.
 - [ ] No errors in `latest.log` (use `/rpoc dump scope` if a condition misbehaves).
 

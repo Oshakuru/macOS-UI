@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.19 (2026-11-17), light prototype
+- Respackopts: magnification is a simple choice of **1.00× (off), 1.25×, 1.38× (default) or 1.50×**, replacing the 0.18 slider, which could only snap between pre-built sizes.
+
 ## 0.18 (2026-11-17), light prototype
 - Respackopts: **magnification is a slider from 1.00 to 1.50** (default 1.38; 1.00 turns it off). Sizes are pre-built, so the slider snaps to 1.10, 1.20, 1.30, 1.38 or 1.50. Values above 1.50 are no longer offered.
 - The magnified model tree is nested one folder per alternative size (`magnified/m/m/m/…`), because a folder rule takes a single fallback.

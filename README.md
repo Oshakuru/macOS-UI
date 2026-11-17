@@ -10,7 +10,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 
 ![Recipe book](docs/images/recipe-book-0.8.png)
 
-> **Status:** early prototype (0.18, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.19, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
@@ -25,7 +25,7 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.18.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.19.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
 
@@ -35,7 +35,7 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 
 | Setting | Default | Options |
 |---|---|---|
-| Magnification (slider) | 1.38 | 1.00 (off) – 1.50; snaps to 1.10 / 1.20 / 1.30 / 1.38 / 1.50 |
+| Magnify selected item | 1.38× | 1.00× (off) / 1.25× / 1.38× / 1.50× |
 | Glass bubble on selected slot | Off | On / off |
 | Hotbar style | Shelf (glass ledge) | Shelf (glass ledge the items sit on) / Dock (glass bar) |
 | Hotbar opacity | Clear | Clear / frosted / dark / solid |

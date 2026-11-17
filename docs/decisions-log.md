@@ -109,5 +109,7 @@
 - User decision: slider **1.00–1.50**, since anything bigger looks odd. Buckets: <1.05 off, 1.10, 1.20, 1.30, 1.38 (default), ≥1.44 → 1.50.
 - Known and accepted: the magnified item also shows in the inventory's hotbar row. The item model `selected` condition and the `gui` display context are the same in the HUD and in inventory screens, so a resource pack can't separate them.
 
+- **0.19:** magnification setting simplified to 1.00 (off) / 1.25 / 1.38 (default) / 1.50 (user decision; sizes have to be pre-built, so a free slider isn't possible).
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
