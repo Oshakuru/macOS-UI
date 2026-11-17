@@ -118,5 +118,42 @@
 ## Name: macUI
 - **"macUI" is the official name** (user decision, 2026-11-17), replacing "macOS UI". Repo renamed to `Oshakuru/macUI`. Zip `macUI-Light-<version>.zip`, title "macUI — Light", namespace `macui`, Respackopts ID `macUi`.
 
+## 0.22: magnification becomes an add-on
+- **Scope rule (user):** macUI is a GUI pack; it must not change in-game item models. Magnification requires replacing every `items/*.json`, and the 0.21 test log showed it overlapping 3D item packs, so it moved to **`macUI-Magnify`**, a separate opt-in pack placed above macUI.
+- The main pack has **no selected-slot marker** (user decision). The bubble remains a Respackopts setting.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
+
+## 0.23: XP bar
+- Match the existing 0.22 shelf, as requested by the owner; the Control Center screenshot is a secondary material reference. Reuse the shelf underlay and tint, without a hard white rim.
+- Keep the 182x5 logical footprint and 2x textures. XP green, jump blue, cooldown grey; no new settings or item/model changes.
+- A fixed vanilla progress sprite is cropped, not dynamically rounded. Its moving edge stays straight except at full charge. Do not simulate a rounded partial cap in previews.
+- Locator background retains vanilla nine-slice metadata; arrows and player-tinted dots remain vanilla to preserve semantics.
+- Preview and in-game acceptance remain pending; generated comparison images are mockups, not gameplay validation.
+
+- Horse jump refinement (owner request): restore vanilla limit divisions with half-pixel inset marks; final two segments start at logical x=161 and use Apple red. XP also restores the same fine markers (follow-up owner request); cooldown remains grey.
+
+- Owner restored the selected-slot glass bubble as the main-pack default. The existing Respackopts switch still allows hiding it; magnification remains a separate add-on.
+
+- Owner superseded the GUI-only packaging rule: integrate magnification into the main pack, off by default. Plain vanilla wrappers preserve 1.00x scale; Respackopts filters item overrides when off and selects 1.25x/1.38x/1.50x alternatives when enabled. No add-on build.
+
+- Version correction: the combined build with marked bars, default bubble and integrated optional magnification is 0.24.
+
+## 0.25: number font
+- Owner selected Manrope for numbers only. A 2x bitmap provider overrides ASCII digits 0–9 before the vanilla default providers; letters and symbols are unchanged. Numbers change wherever the default font is used. Manrope source and OFL license are stored in design/fonts.
+
+## 0.26: tighter selection bubble
+- Inset the glass to 20x20 at (2,2) in the unchanged 24x23 selection canvas, around the normal 16px item. Radius 5 keeps more lower-right surface for stack counts. Fixed-size texture cannot adapt to stack count or optional magnification size.
+
+## 0.27: remaining container screens
+- Match the existing light inventory material across all container backgrounds and associated sprites. Preserve canvas sizes, source alpha/UV layout and metadata; replace detected slot frames with the existing tile helper. Crafter slots need explicit coordinates because their bevel differs.
+- Keep dark text fields/enchantment controls for white labels, semantic blue progress and red errors, plus original map/ingredient artwork. Horse and nautilus preview wells use existing glass.
+- Asset checks cover all 155 container textures; live interaction, text contrast and every workstation state remain pending in-game.
+
+## 0.28: less crowded grids
+- Owner requested smaller squares after loom/stonecutter testing. Standard slot tile inset is now 2px, making a normal 18px slot frame contain a 14px tile. Recipe selection tiles gain a 1px transparent inset. Item size/position, counts and hitboxes are unchanged.
+
+## 0.29: OptiGUI shulker colors
+- Owner approved optional OptiGUI support in the main pack. Match block identifiers, not names, for all dye colors plus undyed. Keep pastel tints so vanilla dark titles stay readable. Preserve alpha and slot positions; vanilla default texture is unchanged.
+- Formats: https://opekope2.dev/OptiGUI/JSON.html and https://opekope2.dev/OptiGUI/INI.html . Live mod testing pending.

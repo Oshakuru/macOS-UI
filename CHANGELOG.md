@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.29 (2026-11-17), light prototype
+- Added optional OptiGUI shulker color matching: 16 dye colors plus undyed, using soft panel/slot tints and the smaller 0.28 tiles. Vanilla fallback stays light. Includes OptiGUI 2 INI and 3 JSON rules.
+
+## 0.28 (2026-11-17), light prototype
+- Reduced standard slot tiles from 16x16 to 14x14 within the same slot spacing. Inset loom/stonecutter recipe states and slot hover highlights to give grids more breathing room. Item rendering, stack counts and hit areas are unchanged.
+
+## 0.27 (2026-11-17), light prototype
+- Extended the inventory material to all remaining container backgrounds and container sprites, preserving texture sizes, UVs and metadata. Workstations, storage, trading, mounts, progress/error states and slot hints included. In-game verification pending.
+
+## 0.26 (2026-11-17), light prototype
+- Tightened the selection bubble to 20x20 logical pixels inside its unchanged 24x23 sprite, with a smaller radius and room for stack counts. Bubble toggle unchanged.
+
+## 0.25 (2026-11-17), light prototype
+- Manrope semibold for ASCII digits 0–9 only. Letters and symbols retain vanilla fonts. Applies to XP, item counts and other default-font numbers. Includes Manrope OFL license.
+
+## 0.24 (2026-11-17), light prototype
+- Magnification returns to the main pack at the owner’s request, off by default. Respackopts offers 1.25×, 1.38× and 1.50×; no separate add-on is built. The main pack now includes item definitions and GUI wrappers, which can conflict with other item-definition packs.
+- Restored the glass selection bubble by default in the main pack; the existing setting can still hide it.
+- Horse jump bar restores vanilla segment boundaries as fine inset markers; the final two charge sections are red instead of orange. Cooldown stays grey.
+- XP and horse jump bars use the existing shelf glass material at 2x, with green XP, blue jump charge and grey cooldown. Fine inset segment markers on both XP and horse jump bars.
+- Locator track matches the glass; vanilla tinted markers and animated arrows are preserved.
+- Vanilla clips partial fills with a straight right edge; rounded moving caps require rendering changes outside resource-pack scope.
+- In-game verification pending.
+
+## 0.23 (2026-11-17), initial XP prototype
+- Initial glass XP, jump and locator tracks. Iterative 0.23 downloads were superseded by the consolidated 0.24 build.
+
+## 0.22 (2026-11-17), light prototype
+- **The main pack is GUI-only.** Magnification moves to a separate opt-in pack, **`macUI-Magnify`**, placed above macUI. It holds the 1,505 item definitions, the magnified models and its own Respackopts size setting. `macUI-Light` now contains no item or model files, so it no longer conflicts with 3D item packs.
+- The selected slot has no marker in the main pack (user decision). The glass bubble stays available as a Respackopts setting.
+
 ## 0.21 (2026-11-17), light prototype
 - **Renamed to macUI.** The repo is now [Oshakuru/macUI](https://github.com/Oshakuru/macUI). The pack builds as `macUI-Light-<version>.zip` and shows as "macUI — Light" in game. The internal namespace is now `macui`, and the Respackopts pack ID is `macUi`, so saved Respackopts settings from earlier prototypes reset to the defaults once.
 

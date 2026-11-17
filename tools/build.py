@@ -10,7 +10,7 @@ Every colour and radius comes from design/tokens.json.
 """
 import json, math, os, shutil, sys, zipfile
 from collections import Counter, deque
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -62,8 +62,8 @@ def well(im, x, y, w, h, r=None):
     """Recessed slot/well. (x,y,w,h) is the full frame box incl. 1px edge."""
     r = TOK['radius.slot'] if r is None else r
     if TOK.get('slot.style') == 'tile':
-        # flat tile filling only the item area; the 1px frame ring becomes panel gutter
-        rrect(im, x + 1, y + 1, w - 2, h - 2, r, col('slot.tile'))
+        pad = TOK['slot.tile_inset']
+        rrect(im, x + pad, y + pad, w - 2 * pad, h - 2 * pad, r, col('slot.tile'))
         return
     rrect(im, x, y, w, h, r, col('slot.edge'))
     rrect(im, x + 1, y + 1, w - 2, h - 2, max(r - 1, 0), col('slot.fill'))
@@ -154,6 +154,108 @@ def repaint_container(path, glass=True):
                 for p in pts:
                     out.putpixel(p, col('glyph')); report['glyph_pixels'] += 1
     return out, report
+
+
+def container_palette(src, accent=False, danger=False):
+    """Keep each sprite's UVs, alpha and artwork; replace its vanilla UI material."""
+    pixels = np.array(src.convert('RGBA'))
+    rgb = pixels[:, :, :3].copy()
+    neutral = (rgb.max(axis=2).astype(int) - rgb.min(axis=2).astype(int)) < 12
+    shades = ((55, 'glyph'), (139, 'glyph'), (198, 'panel.fill'),
+              (255, 'panel.highlight'))
+    value = rgb.mean(axis=2)
+    # Assign from the untouched source so replacements cannot cascade.
+    distances = np.stack([np.abs(value - shade) for shade, _ in shades])
+    nearest = distances.argmin(axis=0)
+    for index, (_, token) in enumerate(shades):
+        pixels[:, :, :3][neutral & (nearest == index)] = col(token)[:3]
+    for source, token in (((33, 33, 33), 'control.fill'),
+                          ((81, 73, 58), 'recipe.area'),
+                          ((160, 145, 114), 'slot.tile'),
+                          ((255, 0, 0), 'control.fill')):
+        pixels[:, :, :3][np.all(rgb == source, axis=2)] = col(token)[:3]
+    if accent or danger:
+        pixels[:, :, :3] = col('danger.glyph' if danger else 'accent.fill')[:3]
+    return Image.fromarray(pixels, 'RGBA')
+
+
+def build_container_screen(path):
+    src = Image.open(path).convert('RGBA')
+    out = container_palette(src)
+    # Round only the panel perimeter. Interior artwork and transparent UV regions stay intact.
+    x0, y0, x1, y1 = src.getchannel('A').getbbox()
+    mask = Image.new('RGBA', src.size)
+    panel_box(mask, x0, y0, x1 - x0, y1 - y0)
+    out.putalpha(Image.fromarray(np.minimum(np.array(src.getchannel('A')),
+                                           np.array(mask.getchannel('A')))))
+    slots = []
+    for x, y, w, h, n, _ in components(src, (139, 139, 139)):
+        if n == w * h and is_framed(src, x, y, w, h) and max(w, h) <= 40:
+            # Remove the old bevel before drawing the inventory's inset slot tile.
+            ImageDraw.Draw(out).rectangle((x - 1, y - 1, x + w, y + h), fill=col('panel.fill'))
+            well(out, x - 1, y - 1, w + 2, h + 2)
+            slots.append((x, y, w, h))
+    if os.path.basename(path) == 'crafter.png':
+        # The crafter uses a different bevel, so it cannot share vanilla slot detection.
+        for x, y, w, h in TOK['container.crafter_slots']:
+            ImageDraw.Draw(out).rectangle((x, y, x + w - 1, y + h - 1), fill=col('panel.fill'))
+            well(out, x, y, w, h)
+            slots.append((x + 1, y + 1, w - 2, h - 2))
+    for x, y, w, h, n, _ in components(src, (0, 0, 0)):
+        if n == w * h and min(w, h) > 30:
+            liquid_glass(out, x, y, w, h, TOK['radius.glass'],
+                         tint='liquid.well_tint_top', tint_bottom='liquid.well_tint_bottom',
+                         edge='liquid.edge_on_light', shadow=False)
+    return out, slots
+
+
+def build_remaining_containers(root):
+    report = {}
+    directory = os.path.join(VAN, 'container')
+    for filename in sorted(os.listdir(directory)):
+        if not filename.endswith('.png') or filename == 'inventory.png':
+            continue
+        image, slots = build_container_screen(os.path.join(directory, filename))
+        save(image, root, 'container/' + filename)
+        report[filename] = len(slots)
+    sprite_dir = os.path.join(VAN, 'sprites', 'container')
+    for directory, _, filenames in os.walk(sprite_dir):
+        for filename in sorted(filenames):
+            if not filename.endswith('.png'):
+                continue
+            path = os.path.join(directory, filename)
+            rel = os.path.relpath(path, VAN)
+            dest = os.path.join(root, 'assets/minecraft/textures/gui', rel)
+            if os.path.exists(dest):
+                continue  # Keep the existing creative and hover treatments.
+            src = Image.open(path).convert('RGBA')
+            name = filename[:-4]
+            danger = name in ('error', 'out_of_stock', 'trade_arrow_out_of_stock', 'cancel')
+            accent = name in ('burn_progress', 'brew_progress', 'fuel_length',
+                              'experience_bar_current', 'experience_bar_result', 'confirm')
+            image = container_palette(src, accent=accent, danger=danger)
+            if name in ('button', 'button_disabled', 'button_highlighted', 'button_selected',
+                        'recipe', 'recipe_selected', 'recipe_highlighted', 'pattern',
+                        'pattern_selected', 'pattern_highlighted', 'enchantment_slot',
+                        'enchantment_slot_disabled', 'enchantment_slot_highlighted'):
+                image = Image.new('RGBA', src.size)
+                token = ('accent.fill' if name.endswith(('highlighted', 'selected')) else
+                         'disabled.fill' if name.endswith('disabled') else
+                         'control.fill' if name.startswith('enchantment') else 'slot.tile')
+                radius = min(TOK['radius.slot'], (min(src.size) - 1) // 2)
+                pad = TOK['recipe.tile_inset'] if name.startswith(('recipe', 'pattern')) else 0
+                rrect(image, pad, pad, src.width - 2 * pad, src.height - 2 * pad, radius, col(token))
+            if name in ('text_field', 'text_field_disabled'):
+                # Anvil labels are white: keep the rename field dark enough to read.
+                a = np.array(image)
+                a[:, :, :3] = col('control.fill' if name == 'text_field' else 'disabled.fill')[:3]
+                image = Image.fromarray(a, 'RGBA')
+            if rel == 'sprites/container/horse/chest_slots.png':
+                image, _ = build_container_screen(path)
+            meta_path = path + '.mcmeta'
+            meta = json.load(open(meta_path)) if os.path.exists(meta_path) else None
+            save(image, root, rel, meta)
+    return report
 
 
 def build_inventory(glass=True):
@@ -523,6 +625,49 @@ def liquid_shelf_hd(W, H, x, w, underlay, rim=False, scale=None):
     return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
 
 
+def build_xp_bar(progress=False, fill='xp.fill', width=None, markers=True):
+    """Match the shelf glass at 2x while retaining vanilla's logical dimensions."""
+    w, h, scale = width or TOK['xp.width'], TOK['xp.height'], TOK['xp.scale']
+    if not progress:
+        im = liquid_glass_hd(w, h, 0, 0, w, h, TOK['xp.radius'],
+                             underlay='xp.track', tint='xp.tint', scale=scale, rim=False)
+        return bar_markers(im, TOK['xp.markers'], True) if markers else im
+    ys, xs = np.mgrid[0:h * scale, 0:w * scale]
+    d, _, _ = _sdf((xs + 0.5) / scale, (ys + 0.5) / scale,
+                    w / 2, h / 2, w / 2, h / 2, TOK['xp.radius'])
+    rgba = np.empty((h * scale, w * scale, 4), dtype=np.uint8)
+    rgba[:] = col(fill)
+    rgba[:, :, 3] = (np.clip(0.5 - d * scale, 0, 1) * col(fill)[3]).round().astype(np.uint8)
+    # Vanilla crops this fixed sprite: intermediate values necessarily have a straight right edge.
+    im = Image.fromarray(rgba, 'RGBA')
+    return bar_markers(im, TOK['xp.markers'], False) if markers else im
+
+
+def bar_markers(im, positions, background):
+    pixels = np.array(im)
+    scale = TOK['xp.scale']
+    y0 = round(TOK['jump.marker_inset'] * scale)
+    y1 = im.height - y0
+    width = max(1, round(TOK['jump.marker_width'] * scale))
+    marker = np.array(col('jump.marker_track' if background else 'jump.marker'))
+    alpha = marker[3] / 255
+    for x in positions:
+        region = pixels[y0:y1, x * scale:x * scale + width, :3]
+        region[:] = (region * (1 - alpha) + marker[:3] * alpha).round().astype(np.uint8)
+    return Image.fromarray(pixels, 'RGBA')
+
+
+def build_jump_bar(state='background'):
+    im = build_xp_bar(state != 'background',
+                      'jump.cooldown' if state == 'cooldown' else 'jump.fill', markers=False)
+    scale = TOK['xp.scale']
+    pixels = np.array(im)
+    if state == 'progress':
+        pixels[:, TOK['jump.limit_start'] * scale:, :3] = col('jump.limit_fill')[:3]
+    return bar_markers(Image.fromarray(pixels, 'RGBA'), TOK['jump.markers'], state == 'background')
+
+
+
 def build_hotbar_shelf(rim=False, underlay='liquid.underlay_hud'):
     return liquid_shelf_hd(182, 22, 0, 182, underlay, rim=rim, scale=TOK['hd.scale_hotbar'])
 
@@ -540,14 +685,15 @@ def build_hotbar(rim=False, underlay='liquid.underlay_hud'):
 
 
 def build_selection():
-    # No selection frame: the selected slot is shown purely by Dock-style magnification of the
-    # item (see build_magnification). The sprite must still exist, so it is fully transparent.
-    return Image.new('RGBA', (24, 23), (0, 0, 0, 0))
+    return build_selection_bubble()
+
 
 
 def build_selection_bubble():
-    """Optional raised glass bubble for the selected slot (Respackopts setting)."""
-    return liquid_glass_hd(24, 23, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
+    """Inset the glass around a 16px item, retaining lower-right room for stack counts."""
+    return liquid_glass_hd(24, 23, TOK['selection.x'], TOK['selection.y'],
+                           TOK['selection.width'], TOK['selection.height'],
+                           TOK['selection.radius'], tint='liquid.lens_tint')
 
 
 def build_offhand(side, rim=False, underlay='liquid.underlay_hud'):
@@ -557,7 +703,8 @@ def build_offhand(side, rim=False, underlay='liquid.underlay_hud'):
 
 def build_highlight(which):
     im = Image.new('RGBA', (24, 24), (0, 0, 0, 0))
-    rrect(im, 4, 4, 16, 16, TOK['radius.slot'], col('highlight.' + which))
+    pad = 3 + TOK['slot.tile_inset']
+    rrect(im, pad, pad, 24 - 2 * pad, 24 - 2 * pad, TOK['radius.slot'], col('highlight.' + which))
     return im
 
 
@@ -661,7 +808,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macui'
 MAG_WRAPPERS = {}
-VERSION = '0.21'   # single source for the pack title and the zip name
+VERSION = '0.29'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -736,7 +883,7 @@ def build_magnification(root):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         json.dump(d, open(dest, 'w'), separators=(',', ':'))
         n += 1
-    write_magnified_models(root, wrappers, TOK['magnify.sizes']['normal'])
+    write_magnified_models(root, wrappers, 1.0)
     MAG_WRAPPERS.update(wrappers)
     return n, len(wrappers)
 
@@ -749,8 +896,8 @@ RPO_CONF = {
     'id': 'macUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
         'hud': {
-            'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large']},
-            'selectionBubble': False,
+            'magnification': {'type': 'enum', 'default': 'off', 'values': ['off', 'small', 'normal', 'large']},
+            'selectionBubble': True,
             'hotbarStyle': {'type': 'enum', 'default': 'shelf', 'values': ['shelf', 'dock']},
             'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
             'hotbarOutline': False,
@@ -763,8 +910,6 @@ RPO_CONF = {
 _L = {
     'en_us': {
         '': 'macUI', 'hud': 'Hotbar and HUD',
-        'hud.magnification': 'Magnify selected item', 'hud.magnification.off': '1.00× (off)',
-        'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (default)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Glass bubble on selected slot',
         'hud.hotbarStyle': 'Hotbar style', 'hud.hotbarStyle.dock': 'Dock (glass bar)', 'hud.hotbarStyle.shelf': 'Shelf (glass ledge)',
         'hud.hotbarOpacity': 'Hotbar opacity', 'hud.hotbarOpacity.clear': 'Clear',
@@ -777,8 +922,6 @@ _L = {
     },
     'es_mx': {
         '': 'macUI', 'hud': 'Barra rápida y HUD',
-        'hud.magnification': 'Ampliar objeto seleccionado', 'hud.magnification.off': '1.00× (desactivada)',
-        'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (predeterminado)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Burbuja de cristal en la ranura seleccionada',
         'hud.hotbarStyle': 'Estilo de la barra', 'hud.hotbarStyle.dock': 'Dock (barra de cristal)', 'hud.hotbarStyle.shelf': 'Repisa (cornisa de cristal)',
         'hud.hotbarOpacity': 'Opacidad de la barra', 'hud.hotbarOpacity.clear': 'Transparente',
@@ -790,6 +933,10 @@ _L = {
         'inventory': 'Inventario', 'inventory.glassPlayerArea': 'Cristal detrás del jugador',
     },
 }
+for lang, label in (('en_us', 'Magnify selected item'), ('es_mx', 'Ampliar objeto seleccionado')):
+    _L[lang].update({'hud.magnification': label, 'hud.magnification.off': '1.00× (off)',
+                     'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38×',
+                     'hud.magnification.large': '1.50×'})
 RPO_LANG = {lang: {('rpo.macUi' + ('.' + k if k else '')): v for k, v in d.items()} for lang, d in _L.items()}
 
 
@@ -816,24 +963,20 @@ def build_options(root):
         _write_json(root, f'assets/{NS}/lang/{lang}.json', entries)
     n = 0
 
-    # hud.magnification: off / 1.25 / 1.38 (default) / 1.50 -------------------------------------
-    # A folder rule accepts one fallback, so the magnified model tree is nested one level per
-    # alternative size; an outer level wins:
-    #   magnified/    -> 1.50 when 'large'
-    #   magnified/m/  -> 1.25 when 'small'
-    #   items/ removed when 'off'
+    # Vanilla uses unscaled wrappers; Respackopts selects the optional magnified sizes.
     _rpo(root, 'assets/minecraft/items/', '!hud.magnification.off'); n += 1
-    sizes = TOK['magnify.sizes']
     mdir = f'assets/{NS}/models/magnified/'
-    for sub, key in (('', 'large'), ('m/', 'small')):
+    for sub, key in (('', 'large'), ('m/', 'normal'), ('m/m/', 'small')):
         base = alt + f'magnify/{key}/'
-        write_magnified_models(root, MAG_WRAPPERS, sizes[key], base)
-        _write_json(root, mdir + sub + '.rpo', {'condition': f'!hud.magnification.{key}', 'fallback': base + sub}); n += 1
+        write_magnified_models(root, MAG_WRAPPERS, TOK['magnify.sizes'][key], base)
+        _write_json(root, mdir + sub + '.rpo',
+                    {'condition': f'!hud.magnification.{key}', 'fallback': base + sub}); n += 1
 
     # hud.selectionBubble ---------------------------------------------------------------------
-    save_at(build_selection_bubble(), root, alt + 'bubble/hotbar_selection.png')
+    save_at(Image.new('RGBA', build_selection().size, (0, 0, 0, 0)),
+            root, alt + 'bubble/hotbar_selection.png')
     _write_json(root, gui + 'sprites/hud/hotbar_selection.png.rpo',
-                {'condition': '!hud.selectionBubble', 'fallbacks': [alt + 'bubble/hotbar_selection.png']}); n += 1
+                {'condition': 'hud.selectionBubble', 'fallbacks': [alt + 'bubble/hotbar_selection.png']}); n += 1
 
     # hud.hotbarStyle x hud.hotbarOpacity x hud.hotbarOutline -> one file per combination -------
     combos = [(st, o, rim) for st in ('shelf', 'dock') for o in TOK['hotbar.opacity'] for rim in (False, True)]
@@ -901,12 +1044,60 @@ def save(im, root, rel, meta=None):
         json.dump(meta, open(p + '.mcmeta', 'w'), indent=2)
 
 
+def build_shulker_colors(root):
+    """Optional OptiGUI variants; vanilla keeps the untinted main texture."""
+    base = Image.open(os.path.join(root, 'assets/minecraft/textures/gui/container/shulker_box.png')).convert('RGBA')
+    source = np.array(base)
+    for color, hex_color in TOK['shulker.colors'].items():
+        pixels = source.copy()
+        tint = np.array(_hexc(hex_color)[:3])
+        for token in ('panel.fill', 'panel.edge', 'panel.highlight', 'panel.shade', 'slot.tile'):
+            mask = np.all(source[:, :, :3] == col(token)[:3], axis=2) & (source[:, :, 3] > 0)
+            amount = TOK['shulker.slot_tint' if token == 'slot.tile' else 'shulker.panel_tint']
+            pixels[:, :, :3][mask] = np.round(np.array(col(token)[:3]) * (1 - amount) + tint * amount).astype(np.uint8)
+        texture = f'assets/{NS}/textures/gui/shulker/{color}.png'
+        save_at(Image.fromarray(pixels, 'RGBA'), root, texture)
+        block = 'shulker_box' if color == 'undyed' else color + '_shulker_box'
+        replacement = f'{NS}:textures/gui/shulker/{color}.png'
+        _write_json(root, f'assets/{NS}/optigui/gui/shulker/{color}.json',
+                    {'containers': 'minecraft:' + block,
+                     'textures': {'minecraft:textures/gui/container/shulker_box.png': replacement}})
+        # OptiGUI 2 uses INI; OptiGUI 3 uses the JSON resources above.
+        rel = f'assets/optigui/gui/macui_shulker/{color}.ini'
+        dest = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, 'w', encoding='utf-8') as stream:
+            stream.write(f'[{block}]\nreplacement = {replacement}\n')
+
+
+def build_number_font(root):
+    """Override only ASCII digits; all other glyphs keep the vanilla providers."""
+    font_dir = os.path.join(REPO, 'design', 'fonts')
+    font = ImageFont.truetype(os.path.join(font_dir, 'Manrope.ttf'), TOK['font.numbers.size'])
+    font.set_variation_by_axes([TOK['font.numbers.weight'] if axis['name'] == b'Weight'
+                               else axis['default'] for axis in font.get_variation_axes()])
+    cell = TOK['font.numbers.cell']
+    atlas = Image.new('RGBA', (cell * 10, cell), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(atlas)
+    top = min(font.getbbox(digit)[1] for digit in '0123456789')
+    for index, digit in enumerate('0123456789'):
+        draw.text((index * cell, -top), digit, font=font, fill='white')
+    save_at(atlas, root, f'assets/{NS}/textures/font/numbers.png')
+    default = json.load(open(os.path.join(REF, 'assets', 'minecraft', 'font', 'default.json')))
+    default['providers'].insert(0, {'type': 'bitmap', 'file': f'{NS}:font/numbers.png',
+                                   'height': TOK['font.numbers.height'],
+                                   'ascent': TOK['font.numbers.ascent'], 'chars': ['0123456789']})
+    _write_json(root, 'assets/minecraft/font/default.json', default)
+    shutil.copyfile(os.path.join(font_dir, 'Manrope-OFL.txt'), os.path.join(root, 'Manrope-OFL.txt'))
+
+
 def build_pack(name, desc, btn_r):
     root = os.path.join(OUT, name)
     shutil.rmtree(root, ignore_errors=True); os.makedirs(root)
     json.dump({"pack": {"description": desc, "min_format": [75, 0], "max_format": [75, 0]}},
               open(os.path.join(root, 'pack.mcmeta'), 'w'), indent=2, ensure_ascii=False)
     build_icon().save(os.path.join(root, 'pack.png'))
+    build_number_font(root)
     inv, report = build_inventory()
     save(inv, root, 'container/inventory.png')
     for tab in ('tab_items', 'tab_item_search', 'tab_inventory'):
@@ -946,8 +1137,16 @@ def build_pack(name, desc, btn_r):
     for kind in ('full', 'half', 'empty'):
         save(build_food(kind, 'food.empty' if kind == 'empty' else 'food.silver'), root, f'sprites/hud/food_{kind}.png')
         save(build_food(kind, 'food.empty_hunger' if kind == 'empty' else 'food.hunger'), root, f'sprites/hud/food_{kind}_hunger.png')
+    for progress, suffix in ((False, 'background'), (True, 'progress')):
+        save(build_xp_bar(progress), root, f'sprites/hud/experience_bar_{suffix}.png')
+    for state in ('background', 'progress', 'cooldown'):
+        save(build_jump_bar(state), root, f'sprites/hud/jump_bar_{state}.png')
+    locator_meta = json.load(open(os.path.join(VAN, 'sprites/hud/locator_bar_background.png.mcmeta')))
+    save(build_xp_bar(width=TOK['locator.width'], markers=False), root,
+         'sprites/hud/locator_bar_background.png', locator_meta)
+    # Keep vanilla's player tinting, arrow animation and marker silhouettes intact.
     save(build_hotbar_shelf(), root, 'sprites/hud/hotbar.png')          # default: Liquid Glass shelf
-    save(build_selection(), root, 'sprites/hud/hotbar_selection.png')
+    save(build_selection(), root, 'sprites/hud/hotbar_selection.png')   # glass selection bubble by default
     save(build_offhand_shelf('left'), root, 'sprites/hud/hotbar_offhand_left.png')
     save(build_offhand_shelf('right'), root, 'sprites/hud/hotbar_offhand_right.png')
     save(build_highlight('back'), root, 'sprites/container/slot_highlight_back.png', nine(24, 24, 4))
@@ -967,6 +1166,8 @@ def build_pack(name, desc, btn_r):
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
+    report['containers'] = build_remaining_containers(root)
+    build_shulker_colors(root)
     report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
     report['rpo_files'] = build_options(root)
     z = os.path.join(OUT, name + '.zip')
