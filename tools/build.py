@@ -589,7 +589,7 @@ def build_food(kind, palette):
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.11'   # single source for the pack title and the zip name
+VERSION = '0.12'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):

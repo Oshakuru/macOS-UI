@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.12 (2026-11-17), light prototype
+- Hunger-effect food icons are now **blue** (Apple-blue family) instead of green.
+
 ## 0.11 (2026-11-17), light prototype
 - **Food bar:** the drumsticks are replaced by silver apples. They're hand-drawn at 9×9 after the layout of Minecraft's golden apple and coloured in the logo's cool silver. All six sprites: full, half (left half), empty (dark silhouette) and green Hunger versions.
 

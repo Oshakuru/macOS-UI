@@ -85,5 +85,7 @@
 
 - **Approved:** the silver apple food icons (user, 2026-11-17).
 
+- **Hunger effect:** blue apples instead of green (user decision).
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
