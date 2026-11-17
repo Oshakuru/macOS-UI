@@ -1,3 +1,5 @@
+<p align="center"><img src="design/logo/logo-source.png" width="160" alt="macOS UI logo"></p>
+
 # macOS UI
 
 Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while staying 100% vanilla.
@@ -47,6 +49,7 @@ All colours and radii live in [`design/tokens.json`](design/tokens.json). Change
 
 ```
 design/tokens.json        Design tokens: every colour and corner radius
+design/logo/              Pack logo: original artwork and the 32x32 pixel version used for pack.png
 tools/extract_vanilla.py  Pulls vanilla GUI reference assets out of the client jar
 tools/build.py            Generates the pack from tokens + vanilla geometry
 docs/                     Feasibility study, theme plan, decisions log, testing checklist

@@ -532,15 +532,9 @@ def build_tooltip():
 
 
 def build_icon():
-    im = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
-    rrect(im, 2, 2, 60, 60, 12, col('panel.edge'))
-    rrect(im, 3, 3, 58, 58, 11, col('panel.fill'))
-    for i in range(3):
-        for j in range(3):
-            well(im, 11 + i * 15, 9 + j * 13, 13, 11, r=2)
-    rrect(im, 8, 49, 48, 9, 4, (0x1D, 0x1D, 0x1F, 255))
-    rrect(im, 10, 51, 10, 5, 2, (0xF5, 0xF5, 0xF7, 255))
-    return im.resize((128, 128), Image.NEAREST)
+    """pack.png: the macOS UI logo (design/logo/logo-32.png), scaled x4 with nearest neighbour."""
+    logo = Image.open(os.path.join(REPO, 'design', 'logo', 'logo-32.png')).convert('RGBA')
+    return logo.resize((logo.width * 4, logo.height * 4), Image.NEAREST)
 
 
 # ---------------------------------------------------------------- hotbar magnification

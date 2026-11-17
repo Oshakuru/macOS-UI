@@ -3,6 +3,7 @@
 ## 0.9 (2026-11-17), light prototype
 - Selection bubble removed: the selected hotbar slot is shown only by magnification. `hotbar_selection.png` is now transparent.
 - Magnification increased from 1.25× to **1.5×**.
+- New pack icon: the macOS UI logo, recovered to its native 20×24 pixel grid and shown as a crisp 128×128 `pack.png`.
 - The zip name now includes the version (`macOS-UI-Light-0.9.zip`), set once by `VERSION` in `tools/build.py`.
 
 ## 0.8.1 (2026-11-17), light prototype
