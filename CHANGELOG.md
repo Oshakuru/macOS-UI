@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6 (2026-11-17), light prototype
+- **Pill buttons chosen.** The rounded-rectangle variant is dropped, and the build now produces a single pack, `VanillaAppleUI-Light`.
+
 ## 0.5 (2026-11-17), light prototype
 - **Liquid Glass** (Apple, 2025) replaces the dark Dock material and the old glass well. It's one shared material: a clear body with a light tint; a specular rim brightest at the top-left with a weaker glint at the bottom-right; a softer inner band so the edge reads as thick glass; and a floating shadow.
 - Hotbar (Dock) and offhand: Liquid Glass with a faint dark underlay so white stack counts stay readable, and 9-px corners.

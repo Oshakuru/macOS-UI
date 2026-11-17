@@ -5,7 +5,7 @@ Usage:
     python3 tools/build.py                                                  # -> dist/
 
 Optional: python3 tools/build.py <vanilla_reference_root> <out_dir>
-Produces two packs (rounded-rect buttons and pill buttons) as folders and zips in dist/.
+Produces the pack as a folder and a zip in dist/.
 Every colour and radius comes from design/tokens.json.
 """
 import json, math, os, shutil, sys, zipfile
@@ -309,7 +309,6 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('VanillaAppleUI-Light-Rounded', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.5 · rounded buttons', TOK['radius.button'])
-    build_pack('VanillaAppleUI-Light-Pill', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.5 · pill buttons', TOK['radius.pill'])
+    rep = build_pack('VanillaAppleUI-Light', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.6', TOK['radius.button'])
     print(json.dumps({k: (v if k == 'glyph_pixels' else len(v)) for k, v in rep.items()}))
     print('slots', rep['slots']); print('wells', rep['wells'])

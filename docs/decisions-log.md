@@ -46,5 +46,8 @@
 - **Not possible in vanilla:** blur, refraction and motion-reactive highlights. The material relies on real transparency plus static highlights.
 - **Dock magnification requested** (enlarge the selected item). **Not possible:** item render size is hardcoded. Substitute: the selected slot is a raised, brighter glass bubble that pokes 1 px above the bar. The indicator dot was removed.
 
+## 0.6: button shape decided
+- **Pill buttons** (10-px corners; nine-slice border left/right 10, top/bottom 9). Rounded rectangle dropped. One pack: `VanillaAppleUI-Light`.
+
 ## Open
-- Confirm which button variant was in the 0.3 test (pill border fix).
+- Confirm pill buttons load in game after the border fix (0.2+).
