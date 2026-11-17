@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+- Renamed to **macOS UI**. The pack builds as `macOS-UI-Light.zip` and shows as "macOS UI — Light" in game.
+
+## 0.7 (2026-11-17), light prototype
+- **Creative inventory restyled:**
+  - All three backgrounds (item tabs, search, survival inventory), using the same tiles, glass player area and panel as the survival inventory.
+  - The search field is dark, because vanilla draws its text in white.
+  - The destroy-item slot is a red-tinted tile with a red ×.
+  - The scroll track is a tile; the scroller is a grey pill.
+  - All 28 tab images: the selected tab merges into the panel, unselected tabs are a darker grey, and the first and last tabs keep the panel's outer edge.
+- **Recipe book button:** panel-coloured, rounded, with a blue accent edge on hover. The vanilla book art is kept, with its greens recoloured to the accent blue.
+- `tools/build.py`: the inventory restyle is now a generic `repaint_container()` that works on any vanilla container background.
+
 ## 0.6 (2026-11-17), light prototype
 - **Pill buttons chosen.** The rounded-rectangle variant is dropped, and the build now produces a single pack, `VanillaAppleUI-Light`.
 

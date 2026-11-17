@@ -1,4 +1,4 @@
-"""Build the Vanilla x Apple UI resource packs from design tokens + the vanilla reference.
+"""Build the macOS UI resource pack from design tokens + the vanilla reference.
 
 Usage:
     python3 tools/extract_vanilla.py path/to/minecraft-1.21.11-client.jar   # once
@@ -105,26 +105,115 @@ def is_framed(im, x, y, w, h):
     return top and left and bot and right
 
 
-def build_inventory():
-    src = Image.open(os.path.join(VAN, 'container', 'inventory.png')).convert('RGBA')
+def repaint_container(path):
+    """Generic container restyle: keeps the vanilla canvas, panel bounds and every slot position.
+    - panel bounds -> rounded light panel
+    - framed #8B8B8B areas (slots, scroll tracks) -> flat tiles
+    - framed black areas (player preview) -> Liquid Glass
+    - large unframed #8B8B8B areas (creative search field, white text) -> dark field
+    - small unframed #8B8B8B shapes (arrows) -> glyph colour
+    - creative "destroy item" slot (#AB7F7F) -> red-tinted tile with an X
+    """
+    src = Image.open(path).convert('RGBA')
     out = Image.new('RGBA', src.size, (0, 0, 0, 0))
-    panel_box(out, 0, 0, 176, 166)
-    report = {'slots': [], 'wells': [], 'glyph_pixels': 0}
-    # slots and other framed wells (fill #8B8B8B) + player preview (opaque black)
-    for rgb in ((0x8B, 0x8B, 0x8B), (0, 0, 0)):
+    bx0, by0, bx1, by1 = src.getchannel('A').getbbox()
+    panel_box(out, bx0, by0, bx1 - bx0, by1 - by0)
+    report = {'slots': [], 'wells': [], 'fields': [], 'glyph_pixels': 0}
+    for rgb in ((0x8B, 0x8B, 0x8B), (0, 0, 0), (0xAB, 0x7F, 0x7F)):
         for x, y, w, h, n, pts in components(src, rgb):
-            if n == w * h and is_framed(src, x, y, w, h):
+            framed = is_framed(src, x, y, w, h)
+            if rgb == (0xAB, 0x7F, 0x7F):
+                if n < 50: continue
+                rrect(out, x, y, w, h, TOK['radius.slot'], col('danger.tile'))
+                g = col('danger.glyph')
+                for i in range(4, w - 4):
+                    for d in (0, 1):
+                        out.putpixel((x + i, y + min(i + d - 1, h - 1)), g)
+                        out.putpixel((x + w - 1 - i, y + min(i + d - 1, h - 1)), g)
+                report['slots'].append((x, y, w, h))
+            elif n == w * h and framed:
                 fx, fy, fw, fh = x - 1, y - 1, w + 2, h + 2
                 if rgb == (0, 0, 0):
-                    liquid_glass(out, fx, fy, fw, fh, TOK['radius.glass'], tint='liquid.well_tint_top', tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False); report['wells'].append((fx, fy, fw, fh))
+                    liquid_glass(out, fx, fy, fw, fh, TOK['radius.glass'], tint='liquid.well_tint_top',
+                                 tint_bottom='liquid.well_tint_bottom', edge='liquid.edge_on_light', shadow=False)
+                    report['wells'].append((fx, fy, fw, fh))
+                elif max(w, h) > 40:
+                    well(out, fx, fy, fw, fh, r=TOK['radius.track']); report['slots'].append((fx, fy, fw, fh))
                 else:
                     well(out, fx, fy, fw, fh); report['slots'].append((fx, fy, fw, fh))
+            elif rgb == (0x8B, 0x8B, 0x8B) and n >= 200:
+                rrect(out, x, y, w, h, 3, col('control.fill')); report['fields'].append((x, y, w, h))
             elif rgb == (0x8B, 0x8B, 0x8B) and n >= 10:
                 # (tiny components are vanilla bevel corner pixels of slot frames: dropped)
-                # unframed grey shapes = glyphs (crafting arrow)
                 for p in pts:
                     out.putpixel(p, col('glyph')); report['glyph_pixels'] += 1
     return out, report
+
+
+def build_inventory():
+    return repaint_container(os.path.join(VAN, 'container', 'inventory.png'))
+
+
+# ---------------------------------------------------------------- creative tabs + scroller
+def build_tab(pos, selected, top, index):
+    """26x32 creative tab. Selected tabs overlap the panel by 4px and merge into it (no edge there);
+    tab 1 keeps the panel's left edge, tab 7 its right edge. Unselected tabs sit 2px further out."""
+    im = Image.new('RGBA', (26, 32), (0, 0, 0, 0))
+    r = TOK['radius.tab']
+    fill = col('panel.fill') if selected else col('tab.unselected')
+    edge = col('panel.edge')
+    h = 32 if selected else 30
+    oy = 0 if (selected or not top) else 2
+    # draw a box with rounded corners only on the outer side, then flip for bottom tabs
+    box = Image.new('RGBA', (26, h + r), (0, 0, 0, 0))
+    rrect(box, 0, 0, 26, h + r, r, edge)
+    rrect(box, 1, 1, 24, h + r - 2, r - 1, fill)
+    if selected:
+        hline(box, r, 1, 26 - 2 * r, col('panel.highlight'))
+    box = box.crop((0, 0, 26, h))
+    if selected:
+        merge = 3
+        for yy in range(h - merge, h):
+            for xx in range(26):
+                box.putpixel((xx, yy), fill)
+            if index == 1: box.putpixel((0, yy), edge)
+            if index == 7: box.putpixel((25, yy), edge)
+    if not top:
+        box = box.transpose(Image.FLIP_TOP_BOTTOM)
+    im.alpha_composite(box, (0, oy))
+    return im
+
+
+def build_recipe_button(highlighted):
+    """20x18 recipe-book toggle: panel-coloured rounded button; hover = accent edge.
+    The vanilla book artwork is kept and its greens are remapped to the accent blue ramp."""
+    src = Image.open(os.path.join(VAN, 'sprites', 'recipe_book', 'button.png')).convert('RGBA')
+    im = Image.new('RGBA', (20, 18), (0, 0, 0, 0))
+    r = TOK['radius.icon_button']
+    rrect(im, 0, 0, 20, 18, r, col('accent.fill') if highlighted else col('panel.edge'))
+    rrect(im, 1, 1, 18, 16, r - 1, col('panel.fill'))
+    hline(im, r, 1, 20 - 2 * r, col('panel.highlight'))
+    remap = {tuple(int(k[i:i + 2], 16) for i in (1, 3, 5)): v for k, v in TOK['book.map'].items()}
+    for yy in range(2, 16):
+        for xx in range(2, 18):
+            p = src.getpixel((xx, yy))
+            if p[3] == 0 or p[:3] == (0xC6, 0xC6, 0xC6):
+                continue
+            if p[:3] in remap:
+                h = remap[p[:3]]
+                p = (int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16), 255)
+            im.putpixel((xx, yy), p)
+    return im
+
+
+def build_scroller(disabled):
+    im = Image.new('RGBA', (12, 15), (0, 0, 0, 0))
+    if disabled:
+        rrect(im, 0, 0, 12, 15, 4, col('scroller.disabled'))
+    else:
+        rrect(im, 0, 0, 12, 15, 4, col('scroller.edge'))
+        rrect(im, 1, 1, 10, 13, 3, col('scroller.fill'))
+    return im
 
 
 # ---------------------------------------------------------------- Liquid Glass material
@@ -284,6 +373,19 @@ def build_pack(name, desc, btn_r):
     build_icon().save(os.path.join(root, 'pack.png'))
     inv, report = build_inventory()
     save(inv, root, 'container/inventory.png')
+    for tab in ('tab_items', 'tab_item_search', 'tab_inventory'):
+        im, rep = repaint_container(os.path.join(VAN, 'container', 'creative_inventory', tab + '.png'))
+        save(im, root, f'container/creative_inventory/{tab}.png')
+        report[tab] = {k: len(v) if isinstance(v, list) else v for k, v in rep.items()}
+    for top in (True, False):
+        for sel in (True, False):
+            for i in range(1, 8):
+                tab_file = f"tab_{'top' if top else 'bottom'}_{'selected' if sel else 'unselected'}_{i}.png"
+                save(build_tab(i, sel, top, i), root, "sprites/container/creative_inventory/" + tab_file)
+    save(build_recipe_button(False), root, 'sprites/recipe_book/button.png')
+    save(build_recipe_button(True), root, 'sprites/recipe_book/button_highlighted.png')
+    save(build_scroller(False), root, 'sprites/container/creative_inventory/scroller.png')
+    save(build_scroller(True), root, 'sprites/container/creative_inventory/scroller_disabled.png')
     save(build_hotbar(), root, 'sprites/hud/hotbar.png')
     save(build_selection(), root, 'sprites/hud/hotbar_selection.png')
     save(build_offhand('left'), root, 'sprites/hud/hotbar_offhand_left.png')
@@ -309,6 +411,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('VanillaAppleUI-Light', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.6', TOK['radius.button'])
-    print(json.dumps({k: (v if k == 'glyph_pixels' else len(v)) for k, v in rep.items()}))
-    print('slots', rep['slots']); print('wells', rep['wells'])
+    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.7', TOK['radius.button'])
+    print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
