@@ -66,3 +66,20 @@ Send a screenshot per issue, with the GUI scale.
 ## Colored shulkers (0.29)
 - [ ] With OptiGUI: all 16 colors and undyed; renamed boxes, relogging, title contrast, hover and item counts.
 - [ ] Without OptiGUI: standard light shulker GUI, no errors.
+
+## OptiFine shulker support (0.30)
+- [ ] Verify each dye and undyed under OptiFine; confirm explicit color rules win over fallback.
+- [ ] Both OptiGUI and OptiFine: normal and renamed boxes retain colors and readable custom labels.
+- [ ] Vanilla fallback remains unchanged.
+
+## Advancements and notifications (0.31)
+- [ ] All advancement tabs/orientations; obtained/unobtained task/goal/challenge shapes; connectors, scrolling and hover descriptions/progress.
+- [ ] Achievement/challenge, recipe unlock, tutorial, now-playing, system warning and popup text contrast at GUI scales 1–4.
+- [ ] Notification counts 1–5 and more; tutorial icons and warning glyphs remain readable.
+
+## Monocraft (0.35)
+- [ ] Menus, inventory titles, tooltips, chat, XP and stack counts at GUI scales 1–4; no clipping or unexpected wrapping.
+- [ ] Accented text and unsupported-script fallback; Force Unicode Font behavior.
+
+## Panorama (1.0.0)
+- [ ] Title menu loads the six snowy taiga faces with no missing textures; full rotation without seams; title and button readability.

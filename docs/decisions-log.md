@@ -157,3 +157,42 @@
 ## 0.29: OptiGUI shulker colors
 - Owner approved optional OptiGUI support in the main pack. Match block identifiers, not names, for all dye colors plus undyed. Keep pastel tints so vanilla dark titles stay readable. Preserve alpha and slot positions; vanilla default texture is unchanged.
 - Formats: https://opekope2.dev/OptiGUI/JSON.html and https://opekope2.dev/OptiGUI/INI.html . Live mod testing pending.
+
+## 0.30: shulker compatibility
+- Added OptiFine color properties after inspecting the supplied Recolourful Containers pack. Reuse our own textures and existing OptiGUI rules; no imported artwork or shaders.
+- Our panels have no baked-in title, so separate renamed textures and title matching would duplicate identical artwork. Leave names unrestricted in all rules. The undyed OptiFine fallback sorts last, following the reference pack approach.
+
+## 0.31: advancements and notifications
+- Use light window/tabs, blue completion frames and graphite description panels; retain distinct task, goal and challenge silhouettes. Category textures become subdued graphite tints.
+- Notification/toast cards use existing light or dark materials according to vanilla text contrast. Preserve tutorial art, warning icon, dimensions and nine-slice metadata. No custom shaders.
+
+## 0.32: glass notifications
+- Owner requested notifications as close to the hotbar as possible. Reuse liquid_glass_hd at hotbar 2x scale with the same radius, white tint, dark underlay and shadow, without a rim. Recipe/tutorial dark labels require a light underlay. Logical dimensions and metadata unchanged. Readability over bright terrain needs testing.
+
+## 0.33: matching recipe toast
+- Owner requested the new-recipe toast match advancement notifications exactly. Both now use the same dark translucent hotbar glass. Vanilla recipe text colors remain hardcoded; test contrast over varied terrain. Tutorial cards retain light glass.
+
+## 0.34: consistent toast glass
+- All five toast backgrounds and the popup panel use the same advancement glass material: advancement, recipe, tutorial, now-playing, system and popup background. System has its original warning glyph. Tutorial/item icons remain recognizable and separate. Text colors remain vanilla; verify contrast over light/dark terrain.
+
+## 0.35: Monocraft text and numbers
+- Owner chose Monocraft for both text and numbers and asked to delete Manrope files. Removed font sources and loose generated Manrope copies; historical build ZIPs retain their original contents. Default font uses Monocraft TTF at size 8/oversample 1, with original vanilla providers as fallback. Check small-size glyph rendering and menu wrapping in game.
+
+## 0.36: crisp Monocraft
+- User screenshots show the live TTF provider rendering soft and broken at small sizes. Bake ASCII and Latin-1 glyphs to a binary-alpha bitmap at size 8, with a fixed baseline and vanilla fallback. This removes live TTF smoothing. Verify menus/stack counts and accented text in game.
+
+## 0.37: matched XP green
+- Owner requested XP fill match the level number. Changed xp.fill to #80FF20; markers and track unchanged.
+
+## 0.38: title panorama
+- Owner supplied the mountain meadow image and approved a single-photo approximation. Generate six 512px cubemap faces from a mirrored spherical wrap, fading to common sky/ground colors at the poles to avoid face seams. Rear landscape repeats in reverse. No shader changes.
+
+## 0.39: proper panorama
+- Owner selected free option 2, Frozen Peaks & Cherry Valley from Beautiful main interface, listed CC0 on Modrinth. Copy its six 1024px panorama faces unchanged, include provenance, and exclude its unrelated sky/assets. Replaces the rejected photo wrap.
+- Winter Night remains a visual reference only; its ARR assets are not bundled.
+
+## 0.40: no custom panorama
+- Owner dropped the panorama: removes the stretched 0.38 photo wrap and does not ship the 0.39 Frozen Peaks faces. Vanilla title panorama is used. `build_panorama` is kept in build.py but no longer called.
+
+## 1.0.0: first official release
+- Owner captured their own snowy taiga panorama (Panorama Studio) and made it the title panorama. Owner reports in-game testing of 0.27 and 0.34–0.40. Version jumps from 0.40 to 1.0.0 for the public release.
