@@ -13,7 +13,8 @@ import json, os, sys, zipfile
 from PIL import Image
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PREFIXES = ('assets/minecraft/textures/gui/', 'assets/minecraft/font/', 'assets/minecraft/lang/en_us.json')
+PREFIXES = ('assets/minecraft/textures/gui/', 'assets/minecraft/font/', 'assets/minecraft/lang/en_us.json',
+            'assets/minecraft/items/', 'assets/minecraft/models/')
 
 
 def main(jar):

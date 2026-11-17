@@ -1,17 +1,22 @@
+<p align="center"><img src="design/logo/logo-source.png" width="160" alt="macOS UI logo"></p>
+
 # macOS UI
 
 Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while staying 100% vanilla.
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and a single blue accent.
 
-![Liquid Glass hotbar](docs/images/hotbar-0.5-liquid-glass.png)
+![Liquid Glass shelf hotbar](docs/images/hotbar-shelf-0.16.png)
 
-> **Status:** early prototype (0.7, light theme). Restyled so far: survival and creative inventories, recipe book button, hotbar, buttons, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+![Recipe book](docs/images/recipe-book-0.8.png)
+
+> **Status:** early prototype (0.20, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
 - **Vanilla only.** No Fabric, Forge, NeoForge, OptiFine, Iris, shaders or mods. Plain resource-pack textures and metadata.
 - **Gameplay untouched.** Slot positions, hitboxes and interactions are exactly vanilla.
+- **Item models:** the hotbar magnification wraps every vanilla item model definition (`assets/minecraft/items/*.json`). Packs that change item *textures* still work. Packs that replace item *model definitions* will conflict.
 - **Apple principles, not a macOS copy.** Material hierarchy, restraint, contrast and craft, translated into pixel art.
 - **Performance first.** Small textures and stretched (not tiled) nine-slice centres.
 
@@ -20,9 +25,28 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy a zip from `dist/` into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macOS-UI-Light-0.20.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
+
+## Optional: in-game settings (Respackopts)
+
+The pack works on plain vanilla Minecraft. Players who also install the [Respackopts](https://modrinth.com/mod/respackopts) mod (Fabric/NeoForge, plus its LibJF dependency) get a settings button next to the pack in the resource pack screen:
+
+| Setting | Default | Options |
+|---|---|---|
+| Magnify selected item | 1.38× | 1.00× (off) / 1.25× / 1.38× / 1.50× |
+| Glass bubble on selected slot | Off | On / off |
+| Hotbar style | Shelf (glass ledge) | Shelf (glass ledge the items sit on) / Dock (glass bar) |
+| Hotbar opacity | Clear | Clear / frosted / dark / solid |
+| Glass outline on hotbar | Off | On / off |
+| Food icons | Silver apples | Silver apples / vanilla |
+| Button shape | Pill | Pill / rounded rectangle (buttons and sliders) |
+| Glass behind player model | On | On / off (opaque tile) |
+
+![Hotbar styles](docs/images/hotbar-styles-0.15.png)
+
+Without the mod, Minecraft ignores `respackopts.json5` and the `.rpo` files, and the defaults above apply. Alternative textures live in `assets/macos_ui/alt/`, which vanilla never loads.
 
 ## Build from source
 
@@ -44,6 +68,7 @@ All colours and radii live in [`design/tokens.json`](design/tokens.json). Change
 
 ```
 design/tokens.json        Design tokens: every colour and corner radius
+design/logo/              Pack logo: original artwork (logo-source.png) and the native-pixel icon (logo-icon.png)
 tools/extract_vanilla.py  Pulls vanilla GUI reference assets out of the client jar
 tools/build.py            Generates the pack from tokens + vanilla geometry
 docs/                     Feasibility study, theme plan, decisions log, testing checklist

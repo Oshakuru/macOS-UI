@@ -16,7 +16,19 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 | Slot hover | Blue highlight on storage, armour, offhand, crafting and result slots |
 | Hotbar | Bar visible against the world; selection ring and stack counts readable; offhand on both sides |
 | Buttons | Normal, hover (blue) and disabled; short buttons ("Done") and wide buttons; no seams when stretched |
+| Sliders | Track, knob at 0% / 50% / 100%, hover and drag (blue), label readable over the knob |
 | Tooltips | Background and frame corners clean; text readable |
+| Recipe book | Tabs, search field (typing, focus edge), craftable toggle on/off, page arrows, craftable/uncraftable/multiple recipe tiles, alternatives popup |
+| Food bar | Full, half and empty apples; Hunger effect (green); readable on light and dark terrain |
+| Magnification | Selected hotbar item is bigger; scrolling between slots; blocks, flat items, compass/clock, shields, banners, heads, chests; inventory hotbar row |
+| Creative | Tabs, search, destroy-item slot, thin scrollbar drags correctly |
+
+## Respackopts (optional)
+Test once **without** the mod (everything must look like the defaults), then with Respackopts and LibJF installed:
+- [ ] The settings button appears next to the pack, with the labels translated.
+- [ ] Each setting switches correctly after the resource reload: magnification (1.00 off, 1.25, 1.38, 1.50), selection bubble, hotbar style (dock/shelf), hotbar opacity (four levels), hotbar outline, food icons, button shape (buttons and sliders), glass player area (survival and creative).
+- [ ] Combinations: shelf + solid + outline, dock + frosted + bubble, magnification 1.50 + bubble.
+- [ ] No errors in `latest.log` (use `/rpoc dump scope` if a condition misbehaves).
 
 ## Reporting
 Send a screenshot per issue, with the GUI scale.
