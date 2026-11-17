@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15 (2026-11-17), light prototype
+- **More Respackopts settings** (optional; vanilla still uses the defaults):
+  - Magnification size: off, 1.25×, 1.38× (default), 1.5× or 1.75×.
+  - Glass selection bubble toggle.
+  - Hotbar opacity: clear, frosted, dark or solid.
+  - **Hotbar style: Dock (glass bar) or Shelf**, a Liquid Glass ledge the items sit on, with a bright top lip and soft shadow, in the classic 3D Dock shape.
+- Style × opacity × outline combinations are generated as separate files (16 per sprite) and chosen with a multi-file fallback chain. Magnification sizes use three nested folder rules, because a folder rule can have only one fallback.
+
 ## 0.14 (2026-11-17), light prototype
 - **Optional in-game settings with Respackopts** (bonus for players who use the mod; vanilla behaviour unchanged): magnification on/off, glass outline on the hotbar, silver-apple or vanilla food icons, pill or rounded-rectangle buttons and sliders, and glass or opaque player area. Menu labels are in English and Spanish (Mexico).
 

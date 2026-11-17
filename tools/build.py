@@ -472,7 +472,8 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, 
         _over(img, sh, sh[3] * np.clip(1 - (ds + 0.6) / 1.2, 0, 1) * (1 - cov))
     rim_w, band_w = TOK['liquid.rim_width'], TOK['liquid.band_width']
     if underlay:
-        u = _rgba(underlay); _over(img, u, u[3] * cov)
+        u = _rgba(underlay) if underlay in TOK else np.array(_hexc(underlay), dtype=np.float64) / 255.0
+        _over(img, u, u[3] * cov)
     t = _rgba(tint or 'liquid.tint'); _over(img, t, t[3] * cov)
     key = np.maximum(0, -0.707 * nx - 0.707 * ny)
     echo = 0.55 * np.maximum(0, 0.707 * nx + 0.707 * ny)
@@ -487,11 +488,53 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, 
     return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
 
 
-def build_hotbar(rim=False):
+def liquid_shelf_hd(W, H, x, w, underlay, rim=False, scale=None):
+    """Liquid Glass *shelf* (classic 3D-Dock look): a glass platform the items sit on instead of a
+    box around them. Trapezoid narrowing towards the back (perspective), bright top lip, faint front
+    edge, translucent surface with a light-to-clear gradient, soft shadow row underneath."""
+    from PIL import ImageDraw
+    s = scale or TOK['hd.scale']
+    ss = 4                                             # supersampling for anti-aliased edges
+    top, bot, ins = TOK['shelf.top'], H - 1, TOK['shelf.inset']
+    poly = [(x + ins, top), (x + w - ins, top), (x + w, bot), (x, bot)]
+    big = Image.new('L', (W * s * ss, H * s * ss), 0)
+    ImageDraw.Draw(big).polygon([(px * s * ss, py * s * ss) for px, py in poly], fill=255)
+    cov = np.asarray(big.resize((W * s, H * s), Image.BOX), dtype=np.float64) / 255.0
+    ys, xs = np.mgrid[0:H * s, 0:W * s]
+    py = (ys + 0.5) / s
+    img = np.zeros((H * s, W * s, 4))
+    # shadow: the shape shifted down by one logical pixel, outside the shelf only
+    sh_mask = np.zeros_like(cov); sh_mask[s:, :] = cov[:-s, :]
+    sh = _rgba('liquid.shadow'); _over(img, sh, sh[3] * sh_mask * (1 - cov))
+    u = _rgba(underlay) if underlay in TOK else np.array(_hexc(underlay), dtype=np.float64) / 255.0
+    _over(img, u, u[3] * cov)
+    t0, t1 = _rgba('shelf.surface_top'), _rgba('shelf.surface_bottom')
+    f = np.clip((py - top) / max(bot - top, 1), 0, 1)
+    _over(img, (1, 1, 1), (t0[3] + (t1[3] - t0[3]) * f) * cov)
+    # top lip: bright 0.75-px band along the back edge; faint band along the front edge
+    lip = _rgba('shelf.lip'); front = _rgba('shelf.front')
+    _over(img, (1, 1, 1), lip[3] * cov * np.clip(1 - (py - top) / 0.75, 0, 1))
+    _over(img, (1, 1, 1), front[3] * cov * np.clip(1 - (bot - py) / 0.75, 0, 1))
+    if rim:  # optional outline around the whole shelf
+        edge = cov - np.asarray(big.filter(__import__('PIL.ImageFilter', fromlist=['MinFilter']).MinFilter(2 * ss + 1))
+                                .resize((W * s, H * s), Image.BOX), dtype=np.float64) / 255.0
+        _over(img, (1, 1, 1), np.clip(edge, 0, 1) * (TOK['liquid.rim_max'] / 255) * 0.8)
+    return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
+
+
+def build_hotbar_shelf(rim=False, underlay='liquid.underlay_hud'):
+    return liquid_shelf_hd(182, 22, 0, 182, underlay, rim=rim, scale=TOK['hd.scale_hotbar'])
+
+
+def build_offhand_shelf(side, rim=False, underlay='liquid.underlay_hud'):
+    return liquid_shelf_hd(29, 24, 0 if side == 'left' else 7, 22, underlay, rim=rim)
+
+
+def build_hotbar(rim=False, underlay='liquid.underlay_hud'):
     # Items float on the glass like Dock icons; no per-slot boxes.
     # 0.8 test: a 4x hotbar (728x88) showed the missing texture in game while the 4x selection and
     # offhand worked; the hotbar is the only HUD sprite wider than 512 texels, so it uses 2x (364x44).
-    return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud',
+    return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay=underlay,
                            scale=TOK['hd.scale_hotbar'], rim=rim)
 
 
@@ -501,8 +544,13 @@ def build_selection():
     return Image.new('RGBA', (24, 23), (0, 0, 0, 0))
 
 
-def build_offhand(side, rim=False):
-    return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud',
+def build_selection_bubble():
+    """Optional raised glass bubble for the selected slot (Respackopts setting)."""
+    return liquid_glass_hd(24, 23, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
+
+
+def build_offhand(side, rim=False, underlay='liquid.underlay_hud'):
+    return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay=underlay,
                            rim=rim)
 
 
@@ -616,7 +664,8 @@ def build_food(kind, palette):
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.14'   # single source for the pack title and the zip name
+MAG_WRAPPERS = {}
+VERSION = '0.15'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -641,12 +690,20 @@ def _magnified_id(mid, wrappers):
     ns, path = full.split(':', 1)
     wid = f'{NS}:magnified/{ns}/{path}'
     if wid not in wrappers:
-        g = _gui_transform(full) or {}
-        k = TOK['magnify.scale']
+        wrappers[wid] = (full, _gui_transform(full) or {})
+    return wid
+
+
+def write_magnified_models(root, wrappers, k, base=None):
+    """Write every wrapper model with gui scale multiplied by k under base (default: the real path)."""
+    for wid, (parent, g) in wrappers.items():
+        path = wid.split(':', 1)[1]                       # magnified/<ns>/<path>
         scale = [round(v * k, 4) for v in g.get('scale', [1, 1, 1])]
         gui = {'rotation': g.get('rotation', [0, 0, 0]), 'translation': g.get('translation', [0, 0, 0]), 'scale': scale}
-        wrappers[wid] = {'parent': full, 'display': {'gui': gui}}
-    return wid
+        rel = (base + path.split('/', 1)[1]) if base else os.path.join('assets', NS, 'models', path)
+        dest = os.path.join(root, rel + '.json')
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        json.dump({'parent': parent, 'display': {'gui': gui}}, open(dest, 'w'), separators=(',', ':'))
 
 
 def _magnify_tree(node, wrappers):
@@ -683,11 +740,8 @@ def build_magnification(root):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         json.dump(d, open(dest, 'w'), separators=(',', ':'))
         n += 1
-    for wid, m in wrappers.items():
-        path = wid.split(':', 1)[1]
-        dest = os.path.join(root, 'assets', NS, 'models', path + '.json')
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        json.dump(m, open(dest, 'w'), separators=(',', ':'))
+    write_magnified_models(root, wrappers, TOK['magnify.sizes']['normal'])
+    MAG_WRAPPERS.update(wrappers)
     return n, len(wrappers)
 
 
@@ -696,45 +750,53 @@ def build_magnification(root):
 # respackopts.json5 and every .rpo file, so the pack behaves exactly as the defaults below.
 # Alternative files live in assets/macos_ui/alt/, which no vanilla loader reads.
 RPO_CONF = {
-    'id': 'macosUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter'],
+    'id': 'macosUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
-        'hud': {'magnification': True, 'hotbarOutline': False, 'foodIcons': ['silverApples', 'vanilla']},
-        'widgets': {'buttonShape': ['pill', 'rounded']},
+        'hud': {
+            'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large', 'extraLarge']},
+            'selectionBubble': False,
+            'hotbarStyle': {'type': 'enum', 'default': 'dock', 'values': ['dock', 'shelf']},
+            'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
+            'hotbarOutline': False,
+            'foodIcons': {'type': 'enum', 'default': 'silverApples', 'values': ['silverApples', 'vanilla']},
+        },
+        'widgets': {'buttonShape': {'type': 'enum', 'default': 'pill', 'values': ['pill', 'rounded']}},
         'inventory': {'glassPlayerArea': True},
     },
 }
-RPO_LANG = {
+_L = {
     'en_us': {
-        'rpo.macosUi': 'macOS UI',
-        'rpo.macosUi.hud': 'Hotbar and HUD',
-        'rpo.macosUi.hud.magnification': 'Magnify selected item',
-        'rpo.macosUi.hud.hotbarOutline': 'Glass outline on hotbar',
-        'rpo.macosUi.hud.foodIcons': 'Food icons',
-        'rpo.macosUi.hud.foodIcons.silverApples': 'Silver apples',
-        'rpo.macosUi.hud.foodIcons.vanilla': 'Vanilla',
-        'rpo.macosUi.widgets': 'Buttons and sliders',
-        'rpo.macosUi.widgets.buttonShape': 'Button shape',
-        'rpo.macosUi.widgets.buttonShape.pill': 'Pill',
-        'rpo.macosUi.widgets.buttonShape.rounded': 'Rounded rectangle',
-        'rpo.macosUi.inventory': 'Inventory',
-        'rpo.macosUi.inventory.glassPlayerArea': 'Glass behind player model',
+        '': 'macOS UI', 'hud': 'Hotbar and HUD',
+        'hud.magnification': 'Magnify selected item', 'hud.magnification.off': 'Off',
+        'hud.magnification.small': 'Small (1.25×)', 'hud.magnification.normal': 'Normal (1.38×)',
+        'hud.magnification.large': 'Large (1.5×)', 'hud.magnification.extraLarge': 'Extra large (1.75×)',
+        'hud.selectionBubble': 'Glass bubble on selected slot',
+        'hud.hotbarStyle': 'Hotbar style', 'hud.hotbarStyle.dock': 'Dock (glass bar)', 'hud.hotbarStyle.shelf': 'Shelf (glass ledge)',
+        'hud.hotbarOpacity': 'Hotbar opacity', 'hud.hotbarOpacity.clear': 'Clear',
+        'hud.hotbarOpacity.frosted': 'Frosted', 'hud.hotbarOpacity.dark': 'Dark', 'hud.hotbarOpacity.solid': 'Solid',
+        'hud.hotbarOutline': 'Glass outline on hotbar',
+        'hud.foodIcons': 'Food icons', 'hud.foodIcons.silverApples': 'Silver apples', 'hud.foodIcons.vanilla': 'Vanilla',
+        'widgets': 'Buttons and sliders', 'widgets.buttonShape': 'Button shape',
+        'widgets.buttonShape.pill': 'Pill', 'widgets.buttonShape.rounded': 'Rounded rectangle',
+        'inventory': 'Inventory', 'inventory.glassPlayerArea': 'Glass behind player model',
     },
     'es_mx': {
-        'rpo.macosUi': 'macOS UI',
-        'rpo.macosUi.hud': 'Barra rápida y HUD',
-        'rpo.macosUi.hud.magnification': 'Ampliar objeto seleccionado',
-        'rpo.macosUi.hud.hotbarOutline': 'Borde de cristal en la barra',
-        'rpo.macosUi.hud.foodIcons': 'Iconos de comida',
-        'rpo.macosUi.hud.foodIcons.silverApples': 'Manzanas plateadas',
-        'rpo.macosUi.hud.foodIcons.vanilla': 'Vanilla',
-        'rpo.macosUi.widgets': 'Botones y deslizadores',
-        'rpo.macosUi.widgets.buttonShape': 'Forma de botones',
-        'rpo.macosUi.widgets.buttonShape.pill': 'Píldora',
-        'rpo.macosUi.widgets.buttonShape.rounded': 'Rectángulo redondeado',
-        'rpo.macosUi.inventory': 'Inventario',
-        'rpo.macosUi.inventory.glassPlayerArea': 'Cristal detrás del jugador',
+        '': 'macOS UI', 'hud': 'Barra rápida y HUD',
+        'hud.magnification': 'Ampliar objeto seleccionado', 'hud.magnification.off': 'Desactivado',
+        'hud.magnification.small': 'Pequeño (1.25×)', 'hud.magnification.normal': 'Normal (1.38×)',
+        'hud.magnification.large': 'Grande (1.5×)', 'hud.magnification.extraLarge': 'Muy grande (1.75×)',
+        'hud.selectionBubble': 'Burbuja de cristal en la ranura seleccionada',
+        'hud.hotbarStyle': 'Estilo de la barra', 'hud.hotbarStyle.dock': 'Dock (barra de cristal)', 'hud.hotbarStyle.shelf': 'Repisa (cornisa de cristal)',
+        'hud.hotbarOpacity': 'Opacidad de la barra', 'hud.hotbarOpacity.clear': 'Transparente',
+        'hud.hotbarOpacity.frosted': 'Esmerilada', 'hud.hotbarOpacity.dark': 'Oscura', 'hud.hotbarOpacity.solid': 'Sólida',
+        'hud.hotbarOutline': 'Borde de cristal en la barra',
+        'hud.foodIcons': 'Iconos de comida', 'hud.foodIcons.silverApples': 'Manzanas plateadas', 'hud.foodIcons.vanilla': 'Vanilla',
+        'widgets': 'Botones y deslizadores', 'widgets.buttonShape': 'Forma de botones',
+        'widgets.buttonShape.pill': 'Píldora', 'widgets.buttonShape.rounded': 'Rectángulo redondeado',
+        'inventory': 'Inventario', 'inventory.glassPlayerArea': 'Cristal detrás del jugador',
     },
 }
+RPO_LANG = {lang: {('rpo.macosUi' + ('.' + k if k else '')): v for k, v in d.items()} for lang, d in _L.items()}
 
 
 def _write_json(root, rel, data):
@@ -759,19 +821,60 @@ def build_options(root):
     for lang, entries in RPO_LANG.items():
         _write_json(root, f'assets/macos_ui/lang/{lang}.json', entries)
     n = 0
-    # hud.magnification: drop the whole items/ override when off
-    _rpo(root, 'assets/minecraft/items/', 'hud.magnification'); n += 1
-    # hud.hotbarOutline: swap to glass-with-rim versions when on
-    for rel, im in (('sprites/hud/hotbar.png', build_hotbar(rim=True)),
-                    ('sprites/hud/hotbar_offhand_left.png', build_offhand('left', rim=True)),
-                    ('sprites/hud/hotbar_offhand_right.png', build_offhand('right', rim=True))):
-        save_at(im, root, alt + 'outline/' + rel)
-        _rpo(root, gui + rel, '!hud.hotbarOutline', alt + 'outline/' + rel); n += 1
-    # hud.foodIcons: remove our food sprites to fall back to vanilla
+
+    # hud.magnification ----------------------------------------------------------------------
+    # off: drop the whole items/ override. Sizes: folders accept a single fallback, so the
+    # magnified model tree is nested three levels deep, one size per level:
+    #   magnified/                 -> large       (fallback when large)
+    #   magnified/minecraft/       -> small       (fallback when small)
+    #   magnified/minecraft/<sub>/ -> extraLarge  (fallback when extraLarge)
+    _rpo(root, 'assets/minecraft/items/', '!hud.magnification.off'); n += 1
+    sizes = TOK['magnify.sizes']
+    mdir = f'assets/{NS}/models/magnified/'
+    write_magnified_models(root, MAG_WRAPPERS, sizes['large'], alt + 'magnify/large/')
+    _write_json(root, mdir + '.rpo', {'condition': '!hud.magnification.large', 'fallback': alt + 'magnify/large/'}); n += 1
+    write_magnified_models(root, MAG_WRAPPERS, sizes['small'], alt + 'magnify/small/')
+    _write_json(root, mdir + 'minecraft/.rpo', {'condition': '!hud.magnification.small', 'fallback': alt + 'magnify/small/minecraft/'}); n += 1
+    write_magnified_models(root, MAG_WRAPPERS, sizes['extraLarge'], alt + 'magnify/xl/')
+    for sub in sorted(os.listdir(os.path.join(root, mdir, 'minecraft'))):
+        if os.path.isdir(os.path.join(root, mdir, 'minecraft', sub)):
+            _write_json(root, mdir + f'minecraft/{sub}/.rpo',
+                        {'condition': '!hud.magnification.extraLarge', 'fallback': alt + f'magnify/xl/minecraft/{sub}/'}); n += 1
+
+    # hud.selectionBubble ---------------------------------------------------------------------
+    save_at(build_selection_bubble(), root, alt + 'bubble/hotbar_selection.png')
+    _write_json(root, gui + 'sprites/hud/hotbar_selection.png.rpo',
+                {'condition': '!hud.selectionBubble', 'fallbacks': [alt + 'bubble/hotbar_selection.png']}); n += 1
+
+    # hud.hotbarStyle x hud.hotbarOpacity x hud.hotbarOutline -> one file per combination -------
+    combos = [(st, o, rim) for st in ('dock', 'shelf') for o in TOK['hotbar.opacity'] for rim in (False, True)]
+    makers = {
+        'sprites/hud/hotbar.png': {'dock': lambda u, r: build_hotbar(rim=r, underlay=u),
+                                   'shelf': lambda u, r: build_hotbar_shelf(rim=r, underlay=u)},
+        'sprites/hud/hotbar_offhand_left.png': {'dock': lambda u, r: build_offhand('left', rim=r, underlay=u),
+                                                'shelf': lambda u, r: build_offhand_shelf('left', rim=r, underlay=u)},
+        'sprites/hud/hotbar_offhand_right.png': {'dock': lambda u, r: build_offhand('right', rim=r, underlay=u),
+                                                 'shelf': lambda u, r: build_offhand_shelf('right', rim=r, underlay=u)},
+    }
+    for rel, make in makers.items():
+        fallbacks = []
+        for st, o, rim in combos:
+            cond = f"hud.hotbarStyle.{st} & hud.hotbarOpacity.{o} & {'' if rim else '!'}hud.hotbarOutline"
+            if (st, o, rim) == ('dock', 'clear', False):
+                main_cond = cond
+                continue
+            path = alt + f"hotbar/{st}_{o}{'_outline' if rim else ''}/" + rel
+            save_at(make[st](TOK['hotbar.opacity'][o], rim), root, path)
+            _write_json(root, path + '.rpo', {'condition': cond}); n += 1
+            fallbacks.append(path)
+        _write_json(root, gui + rel + '.rpo', {'condition': main_cond, 'fallbacks': fallbacks}); n += 1
+
+    # hud.foodIcons: remove our food sprites to fall back to vanilla --------------------------------
     for kind in ('full', 'half', 'empty'):
         for suf in ('', '_hunger'):
             _rpo(root, gui + f'sprites/hud/food_{kind}{suf}.png', 'hud.foodIcons.silverApples'); n += 1
-    # widgets.buttonShape: rounded-rectangle alternatives (texture + nine-slice metadata)
+
+    # widgets.buttonShape: rounded-rectangle alternatives (texture + nine-slice metadata) -------------
     rr = 5
     for st, fn in (('normal', 'button'), ('highlighted', 'button_highlighted'), ('disabled', 'button_disabled')):
         save_at(build_button(st, rr), root, alt + f'rounded/sprites/widget/{fn}.png', nine(200, 20, rr))
@@ -781,7 +884,8 @@ def build_options(root):
         for ext in ('.png', '.png.mcmeta'):
             rel = f'sprites/widget/{fn}{ext}'
             _rpo(root, gui + rel, 'widgets.buttonShape.pill', alt + 'rounded/' + rel); n += 1
-    # inventory.glassPlayerArea: opaque tile instead of glass when off
+
+    # inventory.glassPlayerArea: opaque tile instead of glass when off ---------------------------
     inv, _ = build_inventory(glass=False)
     tab, _ = repaint_container(os.path.join(VAN, 'container', 'creative_inventory', 'tab_inventory.png'), glass=False)
     for rel, im in (('container/inventory.png', inv), ('container/creative_inventory/tab_inventory.png', tab)):
@@ -874,8 +978,8 @@ def build_pack(name, desc, btn_r):
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
-    report['rpo_files'] = build_options(root)
     report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
+    report['rpo_files'] = build_options(root)
     z = os.path.join(OUT, name + '.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
         for d, _, fs in os.walk(root):
