@@ -6,11 +6,27 @@ Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while stayi
 
 A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and a single blue accent.
 
-![Liquid Glass shelf hotbar](docs/images/hotbar-shelf-0.16.png)
-
-![Recipe book](docs/images/recipe-book-0.8.png)
-
 > **Status:** early prototype (0.21, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+
+## Screenshots
+
+User-provided gameplay and menu captures. These show a modded setup; other visual effects and mods visible in the images are not included in macUI.
+
+![Main menu](docs/images/main-menu.png)
+
+![Survival inventory](docs/images/survival-inventory.png)
+
+![Creative inventory](docs/images/creative-inventory.png)
+
+![Music and sound options](docs/images/sound-options.png)
+
+![Survival HUD and empty shelf hotbar](docs/images/survival-hotbar-empty.png)
+
+![Survival HUD and shelf hotbar with items](docs/images/survival-hotbar-items.png)
+
+![Shelf hotbar with diamond sword](docs/images/hotbar-diamond-sword.png)
+
+![Shelf hotbar with enchanted golden apple](docs/images/hotbar-enchanted-apple.png)
 
 ## Principles
 
@@ -44,8 +60,6 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 | Button shape | Pill | Pill / rounded rectangle (buttons and sliders) |
 | Glass behind player model | On | On / off (opaque tile) |
 
-![Hotbar styles](docs/images/hotbar-styles-0.15.png)
-
 Without the mod, Minecraft ignores `respackopts.json5` and the `.rpo` files, and the defaults above apply. Alternative textures live in `assets/macui/alt/`, which vanilla never loads.
 
 ## Build from source
@@ -72,7 +86,7 @@ design/logo/              Pack logo: original artwork (logo-source.png) and the 
 tools/extract_vanilla.py  Pulls vanilla GUI reference assets out of the client jar
 tools/build.py            Generates the pack from tokens + vanilla geometry
 docs/                     Feasibility study, theme plan, decisions log, testing checklist
-docs/images/              Preview renders
+docs/images/              User-provided screenshots
 reference/   (ignored)    Extracted Mojang assets: local only, never committed
 dist/        (ignored)    Built test packs: local only
 ```
