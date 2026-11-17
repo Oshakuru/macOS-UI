@@ -1,6 +1,6 @@
 <p align="center"><img src="design/logo/logo-source.png" width="160" alt="macOS UI logo"></p>
 
-# macOS UI
+# macUI
 
 Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while staying 100% vanilla.
 
