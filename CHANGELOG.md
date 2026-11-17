@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10 (2026-11-17), light prototype
+- Magnification reduced from 1.5× to **1.38×**.
+- Hotbar and offhand: the white specular outline and inner band are removed. The bar is now plain translucent glass with its soft shadow.
+
 ## 0.9 (2026-11-17), light prototype
 - Selection bubble removed: the selected hotbar slot is shown only by magnification. `hotbar_selection.png` is now transparent.
 - Magnification increased from 1.25× to **1.5×**.

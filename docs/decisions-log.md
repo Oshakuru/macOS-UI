@@ -75,5 +75,9 @@
 - User decision: **no selection bubble**. The selected slot is indicated only by Dock-style magnification, now at **1.5×** (a 24-px item in a 20-px slot pitch, so it just touches its neighbours).
 - To check in game: whether the selected slot is still obvious enough without a frame, the overlap with neighbouring items and stack counts, and the inventory's hotbar row (18-px pitch, so slightly more overlap there).
 
+## 0.10
+- Magnification **1.38×** (user tuning after 1.5×).
+- **No white outline on the hotbar or offhand** (user decision). The Liquid Glass rim stays only on the player-preview glass.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

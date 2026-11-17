@@ -451,7 +451,7 @@ def _sdf(px, py, cx, cy, hw, hh, r):
     return d, nx, ny
 
 
-def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, scale=None):
+def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, scale=None, rim=True):
     """Liquid Glass rendered with an SDF at hd.scale: clear body, angle-dependent specular rim,
     inner lensing band and a soft floating shadow. Returns a PIL image of W*s x H*s texels."""
     s = scale or TOK['hd.scale']
@@ -477,9 +477,10 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, 
     spec = lo + (hi - lo) * np.maximum(key, echo) ** 1.6
     band = np.clip((d + rim_w + band_w) * s, 0, 1) * np.clip((-d - rim_w) * s + 1, 0, 1) * cov
     band *= np.clip((d + rim_w + band_w) / band_w, 0, 1)          # fade inward
-    _over(img, (1, 1, 1), spec * TOK['liquid.band'] * band)
-    rim = np.clip((d + rim_w) * s + 0.5, 0, 1) * cov
-    _over(img, (1, 1, 1), spec * rim)
+    if rim:   # white specular outline + inner band (off for the hotbar since 0.10)
+        _over(img, (1, 1, 1), spec * TOK['liquid.band'] * band)
+        edge = np.clip((d + rim_w) * s + 0.5, 0, 1) * cov
+        _over(img, (1, 1, 1), spec * edge)
     return Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGBA')
 
 
@@ -488,7 +489,7 @@ def build_hotbar():
     # 0.8 test: a 4x hotbar (728x88) showed the missing texture in game while the 4x selection and
     # offhand worked; the hotbar is the only HUD sprite wider than 512 texels, so it uses 2x (364x44).
     return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud',
-                           scale=TOK['hd.scale_hotbar'])
+                           scale=TOK['hd.scale_hotbar'], rim=False)
 
 
 def build_selection():
@@ -498,7 +499,8 @@ def build_selection():
 
 
 def build_offhand(side):
-    return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud')
+    return liquid_glass_hd(29, 24, 0 if side == 'left' else 7, 1, 22, 23, TOK['radius.dock'], underlay='liquid.underlay_hud',
+                           rim=False)
 
 
 def build_highlight(which):
@@ -548,7 +550,7 @@ def build_icon():
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.9'   # single source for the pack title and the zip name
+VERSION = '0.10'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
