@@ -10,13 +10,13 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 
 ![Recipe book](docs/images/recipe-book-0.8.png)
 
-> **Status:** early prototype (0.21, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar with Dock-style magnification, silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
+> **Status:** early prototype (0.22, light theme). Restyled so far: survival and creative inventories, recipe book, text fields, Liquid Glass shelf hotbar (plus an optional Dock-style magnification add-on), silver-apple food bar, buttons, sliders, slot highlight and tooltips. A dark theme follows once the light theme is finished.
 
 ## Principles
 
 - **Vanilla only.** No Fabric, Forge, NeoForge, OptiFine, Iris, shaders or mods. Plain resource-pack textures and metadata.
 - **Gameplay untouched.** Slot positions, hitboxes and interactions are exactly vanilla.
-- **Item models:** the hotbar magnification wraps every vanilla item model definition (`assets/minecraft/items/*.json`). Packs that change item *textures* still work. Packs that replace item *model definitions* will conflict.
+- **GUI only.** The main pack changes interface textures only, never item or block models, so it works alongside 3D item packs.
 - **Apple principles, not a macOS copy.** Material hierarchy, restraint, contrast and craft, translated into pixel art.
 - **Performance first.** Small textures and stretched (not tiled) nine-slice centres.
 
@@ -25,9 +25,17 @@ A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla 
 The pack is still being designed and tested, so there are no releases yet. To try it:
 
 1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macUI-Light-0.21.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+2. Copy the zip from `dist/` (e.g. `macUI-Light-0.22.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
 3. Enable it in Options → Resource Packs.
 
+
+## Optional: Magnify add-on
+
+`macUI-Magnify-<version>.zip` enlarges the selected hotbar item like the macOS Dock (1.38× by default). Put it **above** macUI in the resource pack list.
+
+It's a separate pack because a resource pack can only enlarge the selected item by replacing every item definition file (`assets/minecraft/items/*.json`). That's outside the GUI-only scope, and it conflicts with packs that change item model definitions (e.g. 3D item packs). Item *textures* from other packs still work. The enlarged item also shows in the inventory's hotbar row; vanilla can't tell the HUD and inventory screens apart.
+
+With Respackopts, the add-on has its own setting: magnification 1.00× (off), 1.25×, 1.38× or 1.50×.
 
 ## Optional: in-game settings (Respackopts)
 
@@ -35,7 +43,6 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 
 | Setting | Default | Options |
 |---|---|---|
-| Magnify selected item | 1.38× | 1.00× (off) / 1.25× / 1.38× / 1.50× |
 | Glass bubble on selected slot | Off | On / off |
 | Hotbar style | Shelf (glass ledge) | Shelf (glass ledge the items sit on) / Dock (glass bar) |
 | Hotbar opacity | Clear | Clear / frosted / dark / solid |

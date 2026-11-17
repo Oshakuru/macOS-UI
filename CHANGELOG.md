@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22 (2026-11-17), light prototype
+- **The main pack is GUI-only.** Magnification moves to a separate opt-in pack, **`macUI-Magnify`**, placed above macUI. It holds the 1,505 item definitions, the magnified models and its own Respackopts size setting. `macUI-Light` now contains no item or model files, so it no longer conflicts with 3D item packs.
+- The selected slot has no marker in the main pack (user decision). The glass bubble stays available as a Respackopts setting.
+
 ## 0.21 (2026-11-17), light prototype
 - **Renamed to macUI.** The repo is now [Oshakuru/macUI](https://github.com/Oshakuru/macUI). The pack builds as `macUI-Light-<version>.zip` and shows as "macUI — Light" in game. The internal namespace is now `macui`, and the Respackopts pack ID is `macUi`, so saved Respackopts settings from earlier prototypes reset to the defaults once.
 

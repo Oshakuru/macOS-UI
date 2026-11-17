@@ -661,7 +661,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macui'
 MAG_WRAPPERS = {}
-VERSION = '0.21'   # single source for the pack title and the zip name
+VERSION = '0.22'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -749,7 +749,6 @@ RPO_CONF = {
     'id': 'macUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
         'hud': {
-            'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large']},
             'selectionBubble': False,
             'hotbarStyle': {'type': 'enum', 'default': 'shelf', 'values': ['shelf', 'dock']},
             'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
@@ -763,8 +762,6 @@ RPO_CONF = {
 _L = {
     'en_us': {
         '': 'macUI', 'hud': 'Hotbar and HUD',
-        'hud.magnification': 'Magnify selected item', 'hud.magnification.off': '1.00× (off)',
-        'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (default)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Glass bubble on selected slot',
         'hud.hotbarStyle': 'Hotbar style', 'hud.hotbarStyle.dock': 'Dock (glass bar)', 'hud.hotbarStyle.shelf': 'Shelf (glass ledge)',
         'hud.hotbarOpacity': 'Hotbar opacity', 'hud.hotbarOpacity.clear': 'Clear',
@@ -777,8 +774,6 @@ _L = {
     },
     'es_mx': {
         '': 'macUI', 'hud': 'Barra rápida y HUD',
-        'hud.magnification': 'Ampliar objeto seleccionado', 'hud.magnification.off': '1.00× (desactivada)',
-        'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38× (predeterminado)', 'hud.magnification.large': '1.50×',
         'hud.selectionBubble': 'Burbuja de cristal en la ranura seleccionada',
         'hud.hotbarStyle': 'Estilo de la barra', 'hud.hotbarStyle.dock': 'Dock (barra de cristal)', 'hud.hotbarStyle.shelf': 'Repisa (cornisa de cristal)',
         'hud.hotbarOpacity': 'Opacidad de la barra', 'hud.hotbarOpacity.clear': 'Transparente',
@@ -815,20 +810,6 @@ def build_options(root):
     for lang, entries in RPO_LANG.items():
         _write_json(root, f'assets/{NS}/lang/{lang}.json', entries)
     n = 0
-
-    # hud.magnification: off / 1.25 / 1.38 (default) / 1.50 -------------------------------------
-    # A folder rule accepts one fallback, so the magnified model tree is nested one level per
-    # alternative size; an outer level wins:
-    #   magnified/    -> 1.50 when 'large'
-    #   magnified/m/  -> 1.25 when 'small'
-    #   items/ removed when 'off'
-    _rpo(root, 'assets/minecraft/items/', '!hud.magnification.off'); n += 1
-    sizes = TOK['magnify.sizes']
-    mdir = f'assets/{NS}/models/magnified/'
-    for sub, key in (('', 'large'), ('m/', 'small')):
-        base = alt + f'magnify/{key}/'
-        write_magnified_models(root, MAG_WRAPPERS, sizes[key], base)
-        _write_json(root, mdir + sub + '.rpo', {'condition': f'!hud.magnification.{key}', 'fallback': base + sub}); n += 1
 
     # hud.selectionBubble ---------------------------------------------------------------------
     save_at(build_selection_bubble(), root, alt + 'bubble/hotbar_selection.png')
@@ -947,7 +928,7 @@ def build_pack(name, desc, btn_r):
         save(build_food(kind, 'food.empty' if kind == 'empty' else 'food.silver'), root, f'sprites/hud/food_{kind}.png')
         save(build_food(kind, 'food.empty_hunger' if kind == 'empty' else 'food.hunger'), root, f'sprites/hud/food_{kind}_hunger.png')
     save(build_hotbar_shelf(), root, 'sprites/hud/hotbar.png')          # default: Liquid Glass shelf
-    save(build_selection(), root, 'sprites/hud/hotbar_selection.png')
+    save(build_selection(), root, 'sprites/hud/hotbar_selection.png')   # no selection marker (user decision)
     save(build_offhand_shelf('left'), root, 'sprites/hud/hotbar_offhand_left.png')
     save(build_offhand_shelf('right'), root, 'sprites/hud/hotbar_offhand_right.png')
     save(build_highlight('back'), root, 'sprites/container/slot_highlight_back.png', nine(24, 24, 4))
@@ -967,7 +948,6 @@ def build_pack(name, desc, btn_r):
     save(bg, root, 'sprites/tooltip/background.png', nine(100, 100, 9))
     fmeta = nine(100, 100, 10); fmeta['gui']['scaling']['stretch_inner'] = True
     save(fr, root, 'sprites/tooltip/frame.png', fmeta)
-    report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
     report['rpo_files'] = build_options(root)
     z = os.path.join(OUT, name + '.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -977,7 +957,53 @@ def build_pack(name, desc, btn_r):
     return report
 
 
+# ---------------------------------------------------------------- macUI Magnify add-on
+# Magnification has to replace every item definition file, which is outside a GUI-only pack's
+# scope and clashes with 3D item packs, so it ships as a separate opt-in pack placed above macUI.
+ADDON_RPO = {
+    'id': 'macUiMagnify', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
+    'conf': {'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large']}},
+}
+ADDON_LANG = {
+    'en_us': {'': 'macUI Magnify', 'magnification': 'Magnify selected item', 'magnification.off': '1.00× (off)',
+              'magnification.small': '1.25×', 'magnification.normal': '1.38× (default)', 'magnification.large': '1.50×'},
+    'es_mx': {'': 'macUI Magnify', 'magnification': 'Ampliar objeto seleccionado', 'magnification.off': '1.00× (desactivada)',
+              'magnification.small': '1.25×', 'magnification.normal': '1.38× (predeterminado)', 'magnification.large': '1.50×'},
+}
+
+
+def build_magnify_addon():
+    name = f'macUI-Magnify-{VERSION}'
+    root = os.path.join(OUT, name)
+    shutil.rmtree(root, ignore_errors=True); os.makedirs(root)
+    json.dump({"pack": {"description": f'§fmacUI §7— Magnify add-on\n§8Place above macUI · {VERSION}',
+                        "min_format": [75, 0], "max_format": [75, 0]}},
+              open(os.path.join(root, 'pack.mcmeta'), 'w'), indent=2, ensure_ascii=False)
+    build_icon().save(os.path.join(root, 'pack.png'))
+    n_items, n_models = build_magnification(root)
+    # optional Respackopts settings for the add-on
+    gui = 'assets/minecraft/textures/gui/'
+    alt = f'assets/{NS}_magnify/alt/'
+    _write_json(root, 'respackopts.json5', ADDON_RPO)
+    for lang, d in ADDON_LANG.items():
+        _write_json(root, f'assets/{NS}_magnify/lang/{lang}.json',
+                    {('rpo.macUiMagnify' + ('.' + k if k else '')): v for k, v in d.items()})
+    _rpo(root, 'assets/minecraft/items/', '!magnification.off')
+    sizes = TOK['magnify.sizes']
+    mdir = f'assets/{NS}/models/magnified/'
+    for sub, key in (('', 'large'), ('m/', 'small')):
+        base = alt + f'magnify/{key}/'
+        write_magnified_models(root, MAG_WRAPPERS, sizes[key], base)
+        _write_json(root, mdir + sub + '.rpo', {'condition': f'!magnification.{key}', 'fallback': base + sub})
+    with zipfile.ZipFile(root + '.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+        for d, _, fs in os.walk(root):
+            for f in fs:
+                full = os.path.join(d, f); zf.write(full, os.path.relpath(full, root))
+    return {'zip': os.path.basename(root) + '.zip', 'item_definitions': n_items, 'wrapper_models': n_models}
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     rep = build_pack(f'macUI-Light-{VERSION}', f'§fmacUI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
+    print(json.dumps({'addon': build_magnify_addon()}))

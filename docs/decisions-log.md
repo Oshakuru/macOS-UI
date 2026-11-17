@@ -118,5 +118,9 @@
 ## Name: macUI
 - **"macUI" is the official name** (user decision, 2026-11-17), replacing "macOS UI". Repo renamed to `Oshakuru/macUI`. Zip `macUI-Light-<version>.zip`, title "macUI — Light", namespace `macui`, Respackopts ID `macUi`.
 
+## 0.22: magnification becomes an add-on
+- **Scope rule (user):** macUI is a GUI pack; it must not change in-game item models. Magnification requires replacing every `items/*.json`, and the 0.21 test log showed it overlapping 3D item packs, so it moved to **`macUI-Magnify`**, a separate opt-in pack placed above macUI.
+- The main pack has **no selected-slot marker** (user decision). The bubble remains a Respackopts setting.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
