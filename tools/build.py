@@ -1,4 +1,4 @@
-"""Build the Vanilla x Apple UI resource packs from design tokens + the vanilla reference.
+"""Build the macOS UI resource pack from design tokens + the vanilla reference.
 
 Usage:
     python3 tools/extract_vanilla.py path/to/minecraft-1.21.11-client.jar   # once
@@ -411,5 +411,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('VanillaAppleUI-Light', '§fVanilla × Apple UI §7— Light\n§8Prototype 0.7', TOK['radius.button'])
+    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.7', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))

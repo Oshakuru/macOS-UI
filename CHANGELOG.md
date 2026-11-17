@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Renamed to **macOS UI**. The pack builds as `macOS-UI-Light.zip` and shows as "macOS UI — Light" in game.
+
 ## 0.7 (2026-11-17), light prototype
 - **Creative inventory restyled:**
   - All three backgrounds (item tabs, search, survival inventory), using the same tiles, glass player area and panel as the survival inventory.

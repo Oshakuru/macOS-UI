@@ -1,4 +1,4 @@
-# macOS-UI: Vanilla × Apple UI
+# macOS UI
 
 Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while staying 100% vanilla.
 
