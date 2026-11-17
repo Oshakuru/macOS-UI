@@ -111,5 +111,9 @@
 
 - **0.19:** magnification setting simplified to 1.00 (off) / 1.25 / 1.38 (default) / 1.50 (user decision; sizes have to be pre-built, so a free slider isn't possible).
 
+## 0.20: Liquid Glass slider handle
+- The Control Center fill prototype was rejected by the user. **Confirmed:** a value-dependent fill is impossible in vanilla (fixed track image + 8-px handle).
+- Chosen instead: the handle is HD Liquid Glass, blue while hovered or dragged.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

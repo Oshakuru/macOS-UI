@@ -583,16 +583,11 @@ def build_slider_track(highlighted, r=None):
 
 
 def build_slider_knob(highlighted):
-    """8x20 slider handle: a 6x14 rounded knob inset inside the pill track (so at 0% / 100% it
-    stays inside the track's rounded ends); grey at rest, Apple blue on hover/drag."""
-    r = TOK['radius.knob'] - 1
-    im = Image.new('RGBA', (8, 20), (0, 0, 0, 0))
-    x, y, w, h = 1, 3, 6, 14
-    edge, fill, top = (('accent.edge', 'accent.fill', 'accent.top') if highlighted
-                       else ('knob.edge', 'knob.fill', 'knob.highlight'))
-    rrect(im, x, y, w, h, r, col(edge)); rrect(im, x + 1, y + 1, w - 2, h - 2, r - 1, col(fill))
-    hline(im, x + 2, y + 1, w - 4, col(top))
-    return im
+    """8x20 slider handle in Liquid Glass (HD): clear glass knob with specular rim at rest,
+    Apple-blue glass while hovered/dragged. Inset 1px so it stays inside the pill's rounded ends."""
+    if highlighted:
+        return liquid_glass_hd(8, 20, 1, 2, 6, 17, 3, underlay=TOK['knob.glass_active'], shadow=True)
+    return liquid_glass_hd(8, 20, 1, 2, 6, 17, 3, tint='knob.glass_tint', shadow=True)
 
 
 def nine(w, h, border):
@@ -666,7 +661,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
 MAG_WRAPPERS = {}
-VERSION = '0.19'   # single source for the pack title and the zip name
+VERSION = '0.20'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):

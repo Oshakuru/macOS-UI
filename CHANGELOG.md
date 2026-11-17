@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.20 (2026-11-17), light prototype
+- **Slider handle in Liquid Glass** (HD, 4×): a clear glass knob with a specular rim and soft shadow, which turns **Apple-blue glass** while hovered or dragged. The track is unchanged (graphite pill).
+
 ## 0.19 (2026-11-17), light prototype
 - Respackopts: magnification is a simple choice of **1.00× (off), 1.25×, 1.38× (default) or 1.50×**, replacing the 0.18 slider, which could only snap between pre-built sizes.
 
