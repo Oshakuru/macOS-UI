@@ -1,0 +1,17 @@
+# Mojang assets: extracted locally with tools/extract_vanilla.py, never committed
+reference/
+*.jar
+
+# Build output (test packs are built locally; no releases yet)
+dist/
+
+# Local preview renders
+*.preview.png
+
+# OS / editor / Python
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
