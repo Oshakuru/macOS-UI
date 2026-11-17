@@ -79,5 +79,9 @@
 - Magnification **1.38×** (user tuning after 1.5×).
 - **No white outline on the hotbar or offhand** (user decision). The Liquid Glass rim stays only on the player-preview glass.
 
+## 0.11: silver apple food icons
+- User request: replace the food drumsticks with the golden apple, made silver. The 16×16 item can't shrink cleanly to the 9×9 HUD icon, so the apple is redrawn by hand (`APPLE` grid in `tools/build.py`). The palettes are the `food.*` tokens. No Mojang texture is copied.
+- The Apple logo itself is not redrawn for HUD icons; only the user's own artwork is used, for the pack icon.
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).

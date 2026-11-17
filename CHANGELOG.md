@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11 (2026-11-17), light prototype
+- **Food bar:** the drumsticks are replaced by silver apples. They're hand-drawn at 9×9 after the layout of Minecraft's golden apple and coloured in the logo's cool silver. All six sprites: full, half (left half), empty (dark silhouette) and green Hunger versions.
+
 ## 0.10 (2026-11-17), light prototype
 - Magnification reduced from 1.5× to **1.38×**.
 - Hotbar and offhand: the white specular outline and inner band are removed. The bar is now plain translucent glass with its soft shadow.

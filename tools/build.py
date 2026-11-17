@@ -541,6 +541,45 @@ def build_icon():
     return logo.resize((logo.width * k, logo.height * k), Image.NEAREST)
 
 
+# ---------------------------------------------------------------- food bar (silver apples)
+# 9x9 apple, redrawn by hand after the layout of Minecraft's golden apple (stem on top, highlight
+# top-left, shade bottom-right) and coloured silver. The game draws food_empty behind every slot
+# and food_full / food_half on top of it.
+APPLE = [
+    "....s....",
+    "..oosoo..",
+    ".oHllmmo.",
+    "oHllmmmdo",
+    "olmmmmmdo",
+    "ommmmmddo",
+    ".ommmddo.",
+    "..odddo..",
+    "...ooo...",
+]
+
+
+def _hexc(h):
+    h = h.lstrip('#')
+    return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), int(h[6:8], 16) if len(h) == 8 else 255)
+
+
+def build_food(kind, palette):
+    im = Image.new('RGBA', (9, 9), (0, 0, 0, 0))
+    pal = {k: _hexc(v) for k, v in TOK[palette].items()}
+    for y, row in enumerate(APPLE):
+        for x, ch in enumerate(row):
+            if ch == '.':
+                continue
+            if kind == 'empty':
+                c = pal['o'] if ch in 'os' else pal['f']
+            else:
+                if kind == 'half' and x > 4:   # half icon = left half of the apple
+                    continue
+                c = pal[ch]
+            im.putpixel((x, y), c)
+    return im
+
+
 # ---------------------------------------------------------------- hotbar magnification
 # Dock-style magnification of the selected hotbar item, done entirely with vanilla item model
 # definitions (1.21.4+): every assets/minecraft/items/*.json is wrapped in
@@ -550,7 +589,7 @@ def build_icon():
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
-VERSION = '0.10'   # single source for the pack title and the zip name
+VERSION = '0.11'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -676,6 +715,9 @@ def build_pack(name, desc, btn_r):
     save(build_recipe_button(True), root, 'sprites/recipe_book/button_highlighted.png')
     save(build_scroller(False), root, 'sprites/container/creative_inventory/scroller.png')
     save(build_scroller(True), root, 'sprites/container/creative_inventory/scroller_disabled.png')
+    for kind in ('full', 'half', 'empty'):
+        save(build_food(kind, 'food.empty' if kind == 'empty' else 'food.silver'), root, f'sprites/hud/food_{kind}.png')
+        save(build_food(kind, 'food.empty_hunger' if kind == 'empty' else 'food.hunger'), root, f'sprites/hud/food_{kind}_hunger.png')
     save(build_hotbar(), root, 'sprites/hud/hotbar.png')
     save(build_selection(), root, 'sprites/hud/hotbar_selection.png')
     save(build_offhand('left'), root, 'sprites/hud/hotbar_offhand_left.png')
