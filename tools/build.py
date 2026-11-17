@@ -552,6 +552,7 @@ def build_icon():
 MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
+VERSION = '0.9'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -703,5 +704,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.9', TOK['radius.button'])
+    rep = build_pack(f'macOS-UI-Light-{VERSION}', f'§fmacOS UI §7— Light\n§8Prototype {VERSION}', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))
