@@ -451,10 +451,10 @@ def _sdf(px, py, cx, cy, hw, hh, r):
     return d, nx, ny
 
 
-def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True):
+def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True, scale=None):
     """Liquid Glass rendered with an SDF at hd.scale: clear body, angle-dependent specular rim,
     inner lensing band and a soft floating shadow. Returns a PIL image of W*s x H*s texels."""
-    s = TOK['hd.scale']
+    s = scale or TOK['hd.scale']
     ys, xs = np.mgrid[0:H * s, 0:W * s]
     px, py = (xs + 0.5) / s, (ys + 0.5) / s                      # logical coordinates
     img = np.zeros((H * s, W * s, 4))
@@ -485,7 +485,10 @@ def liquid_glass_hd(W, H, x, y, w, h, r, underlay=None, tint=None, shadow=True):
 
 def build_hotbar():
     # Items float on the glass like Dock icons; no per-slot boxes.
-    return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud')
+    # 0.8 test: a 4x hotbar (728x88) showed the missing texture in game while the 4x selection and
+    # offhand worked; the hotbar is the only HUD sprite wider than 512 texels, so it uses 2x (364x44).
+    return liquid_glass_hd(182, 22, 0, 0, 182, 22, TOK['radius.dock'], underlay='liquid.underlay_hud',
+                           scale=TOK['hd.scale_hotbar'])
 
 
 def build_selection():
@@ -700,5 +703,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.8', TOK['radius.button'])
+    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.8.1', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))

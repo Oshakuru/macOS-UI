@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.1 (2026-11-17), light prototype
+- Fix: the 4× hotbar (728×88) showed the missing texture in game. The hotbar is now 2× (364×44). The selection bubble and offhand stay at 4×; both worked in game, as did magnification.
+
 ## 0.8 (2026-11-17), light prototype
 - **Hotbar magnification:** the selected item draws 1.25× larger, like the Dock. Done with vanilla item model definitions: each `items/*.json` is wrapped in a `minecraft:selected` + `display_context: gui` condition that points to a child model with a larger GUI transform, plus `oversized_in_gui`. 1,505 item definitions and 1,940 small wrapper models are generated.
 - **HD Liquid Glass hotbar:** the hotbar, selected-slot bubble and offhand are rendered at 4× texel density with smooth anti-aliased curves, a 0.75-px specular rim, an inner band and a soft shadow. Layout and size in game are unchanged.
