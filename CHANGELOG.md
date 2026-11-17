@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9 (2026-11-17), light prototype
+- Selection bubble removed: the selected hotbar slot is shown only by magnification. `hotbar_selection.png` is now transparent.
+- Magnification increased from 1.25× to **1.5×**.
+
 ## 0.8.1 (2026-11-17), light prototype
 - Fix: the 4× hotbar (728×88) showed the missing texture in game. The hotbar is now 2× (364×44). The selection bubble and offhand stay at 4×; both worked in game, as did magnification.
 

@@ -492,9 +492,9 @@ def build_hotbar():
 
 
 def build_selection():
-    # 24x23 sprite at (slotX-1, hotbarY-1): raised glass bubble (item magnification itself comes
-    # from the item model definitions, see build_magnification()).
-    return liquid_glass_hd(24, 23, 0, 0, 24, 23, TOK['radius.lens'], tint='liquid.lens_tint')
+    # No selection frame: the selected slot is shown purely by Dock-style magnification of the
+    # item (see build_magnification). The sprite must still exist, so it is fully transparent.
+    return Image.new('RGBA', (24, 23), (0, 0, 0, 0))
 
 
 def build_offhand(side):
@@ -703,5 +703,5 @@ def build_pack(name, desc, btn_r):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.8.1', TOK['radius.button'])
+    rep = build_pack('macOS-UI-Light', '§fmacOS UI §7— Light\n§8Prototype 0.9', TOK['radius.button'])
     print(json.dumps({k: (v if not isinstance(v, list) else len(v)) for k, v in rep.items()}))

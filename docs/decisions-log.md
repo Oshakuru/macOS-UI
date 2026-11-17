@@ -71,5 +71,9 @@
 - **Working:** the selection bubble (4×, 96×92), the offhand (4×, 116×96) and **hotbar magnification**.
 - **Broken:** the 4× `hotbar.png` (728×88) rendered as the missing texture. Working hypothesis: a size limit around 512 texels per sprite side (unconfirmed; check `latest.log`). 0.8.1 uses 2× (364×44) for the hotbar.
 
+## 0.9: magnification only
+- User decision: **no selection bubble**. The selected slot is indicated only by Dock-style magnification, now at **1.5×** (a 24-px item in a 20-px slot pitch, so it just touches its neighbours).
+- To check in game: whether the selected slot is still obvious enough without a frame, the overlap with neighbouring items and stack counts, and the inventory's hotbar row (18-px pitch, so slightly more overlap there).
+
 ## Open
 - Confirm pill buttons load in game after the border fix (0.2+).
