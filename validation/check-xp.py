@@ -4,7 +4,9 @@ from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
-pack = root / 'dist/macUI-Light-0.39'
+import re
+VERSION = re.search(r"VERSION = '([^']+)'", (root / 'tools/build.py').read_text()).group(1)
+pack = root / f'dist/macUI-Light-{VERSION}'
 hud = pack / 'assets/minecraft/textures/gui/sprites/hud'
 for name in ('experience_bar_background', 'experience_bar_progress', 'jump_bar_background',
              'jump_bar_progress', 'jump_bar_cooldown'):
@@ -23,9 +25,10 @@ assert Image.open(hud / 'locator_bar_background.png').size == (24, 10)
 meta = json.loads((hud / 'locator_bar_background.png.mcmeta').read_text())
 assert meta['gui']['scaling']['width'] == 12
 assert meta['gui']['scaling']['height'] == 5
-assert (pack / 'assets/minecraft/items').is_dir()
-assert json.loads((pack / 'pack.mcmeta').read_text())['pack']['min_format'] == [75, 0]
-print('PASS: HUD sizes, alpha, 2x crop coordinates, locator metadata, format and integrated item scope')
+assert not (pack / 'assets/minecraft/items').exists() and not (pack / 'assets/macui/models').exists()
+mcmeta = json.loads((pack / 'pack.mcmeta').read_text())['pack']
+assert mcmeta['min_format'] == [75, 0] and mcmeta['max_format'] == 97
+print('PASS: HUD sizes, alpha, 2x crop coordinates, locator metadata, formats 75-97 and GUI-only scope')
 
 progress = Image.open(hud / 'jump_bar_progress.png')
 cooldown = Image.open(hud / 'jump_bar_cooldown.png')
@@ -52,20 +55,8 @@ rule = json.loads((hud / 'hotbar_selection.png.rpo').read_text())
 assert rule['condition'] == 'hud.selectionBubble'
 print('PASS: default glass bubble and optional hidden selection')
 
-assert conf['conf']['hud']['magnification']['default'] == 'off'
-items_rule = json.loads((pack / 'assets/minecraft/items/.rpo').read_text())
-assert items_rule['condition'] == '!hud.magnification.off'
-models = list((pack / 'assets/macui/models/magnified').rglob('*.json'))
-assert models
-for model in models:
-    wrapper = json.loads(model.read_text())
-    # Off uses the original inherited GUI scale, rather than a magnification multiplier.
-    assert 'gui' in wrapper['display']
-for sub, key in (('', 'large'), ('m/', 'normal'), ('m/m/', 'small')):
-    rule = json.loads((pack / ('assets/macui/models/magnified/' + sub + '.rpo')).read_text())
-    assert rule['condition'] == '!hud.magnification.' + key
-    assert (pack / rule['fallback']).is_dir()
-print('PASS: integrated magnification defaults off and all size alternatives exist')
+assert 'magnification' not in conf['conf']['hud']
+print('PASS: magnification removed (no item definitions or models)')
 
 providers = json.loads((pack / 'assets/minecraft/font/default.json').read_text())['providers']
 assert providers[0]['type'] == 'bitmap'

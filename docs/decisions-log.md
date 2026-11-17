@@ -196,3 +196,6 @@
 
 ## 1.0.0: first official release
 - Owner captured their own snowy taiga panorama (Panorama Studio) and made it the title panorama. Owner reports in-game testing of 0.27 and 0.34–0.40. Version jumps from 0.40 to 1.0.0 for the public release.
+- 26.x support in the same zip. Comparing the 26.1.2, 26.2 and 26.3 jars against 1.21.11 showed GUI changes are additions only (plus a 2px fix in enchanting_table.png in 26.3), so no overlays are needed: new sprites go in the base pack and older versions ignore them. Overlays stay the plan if a later version renames or resizes a sprite.
+- Owner removed magnification: its copied 1.21.11 item definitions conflicted with 67–69 items Mojang changed in 26.x.
+- Realms button restyled as a standard graphite pill instead of Realms purple, for consistency.
