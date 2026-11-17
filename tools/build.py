@@ -666,7 +666,7 @@ MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
 ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macos_ui'
 MAG_WRAPPERS = {}
-VERSION = '0.17'   # single source for the pack title and the zip name
+VERSION = '0.18'   # single source for the pack title and the zip name
 
 
 def _model_json(mid):
@@ -689,7 +689,7 @@ def _gui_transform(mid, depth=0):
 def _magnified_id(mid, wrappers):
     full = mid if ':' in mid else 'minecraft:' + mid
     ns, path = full.split(':', 1)
-    wid = f'{NS}:magnified/{ns}/{path}'
+    wid = f'{NS}:magnified/m/m/m/{ns}/{path}'   # m/m/m: one folder level per alternative size (see build_options)
     if wid not in wrappers:
         wrappers[wid] = (full, _gui_transform(full) or {})
     return wid
@@ -754,7 +754,7 @@ RPO_CONF = {
     'id': 'macosUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
         'hud': {
-            'magnification': {'type': 'enum', 'default': 'normal', 'values': ['off', 'small', 'normal', 'large', 'extraLarge']},
+            'magnification': {'type': 'number', 'default': 1.38, 'min': 1.0, 'max': 1.5},
             'selectionBubble': False,
             'hotbarStyle': {'type': 'enum', 'default': 'shelf', 'values': ['shelf', 'dock']},
             'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
@@ -768,9 +768,7 @@ RPO_CONF = {
 _L = {
     'en_us': {
         '': 'macOS UI', 'hud': 'Hotbar and HUD',
-        'hud.magnification': 'Magnify selected item', 'hud.magnification.off': 'Off',
-        'hud.magnification.small': 'Small (1.25×)', 'hud.magnification.normal': 'Normal (1.38×)',
-        'hud.magnification.large': 'Large (1.5×)', 'hud.magnification.extraLarge': 'Extra large (1.75×)',
+        'hud.magnification': 'Magnification of selected item (1.00 = off)',
         'hud.selectionBubble': 'Glass bubble on selected slot',
         'hud.hotbarStyle': 'Hotbar style', 'hud.hotbarStyle.dock': 'Dock (glass bar)', 'hud.hotbarStyle.shelf': 'Shelf (glass ledge)',
         'hud.hotbarOpacity': 'Hotbar opacity', 'hud.hotbarOpacity.clear': 'Clear',
@@ -783,9 +781,7 @@ _L = {
     },
     'es_mx': {
         '': 'macOS UI', 'hud': 'Barra rápida y HUD',
-        'hud.magnification': 'Ampliar objeto seleccionado', 'hud.magnification.off': 'Desactivado',
-        'hud.magnification.small': 'Pequeño (1.25×)', 'hud.magnification.normal': 'Normal (1.38×)',
-        'hud.magnification.large': 'Grande (1.5×)', 'hud.magnification.extraLarge': 'Muy grande (1.75×)',
+        'hud.magnification': 'Ampliación del objeto seleccionado (1.00 = desactivada)',
         'hud.selectionBubble': 'Burbuja de cristal en la ranura seleccionada',
         'hud.hotbarStyle': 'Estilo de la barra', 'hud.hotbarStyle.dock': 'Dock (barra de cristal)', 'hud.hotbarStyle.shelf': 'Repisa (cornisa de cristal)',
         'hud.hotbarOpacity': 'Opacidad de la barra', 'hud.hotbarOpacity.clear': 'Transparente',
@@ -823,24 +819,27 @@ def build_options(root):
         _write_json(root, f'assets/macos_ui/lang/{lang}.json', entries)
     n = 0
 
-    # hud.magnification ----------------------------------------------------------------------
-    # off: drop the whole items/ override. Sizes: folders accept a single fallback, so the
-    # magnified model tree is nested three levels deep, one size per level:
-    #   magnified/                 -> large       (fallback when large)
-    #   magnified/minecraft/       -> small       (fallback when small)
-    #   magnified/minecraft/<sub>/ -> extraLarge  (fallback when extraLarge)
-    _rpo(root, 'assets/minecraft/items/', '!hud.magnification.off'); n += 1
+    # hud.magnification (slider 1.00-1.50) ------------------------------------------------------
+    # Sizes must be pre-built, so the slider snaps to buckets. A folder rule accepts one fallback, so
+    # the magnified model tree is nested one level per alternative size; an outer level wins:
+    #   magnified/        -> 1.50  when v >= 1.44
+    #   magnified/m/      -> 1.30  when 1.25 <= v < 1.34
+    #   magnified/m/m/    -> 1.20  when 1.15 <= v < 1.25
+    #   magnified/m/m/m/  -> 1.10  when 1.05 <= v < 1.15
+    #   (kept)            -> 1.38  when 1.34 <= v < 1.44 (default)
+    #   items/ removed    -> off   when v < 1.05
+    v = 'hud.magnification'
+    _rpo(root, 'assets/minecraft/items/', f'{v} >= 1.05'); n += 1
     sizes = TOK['magnify.sizes']
     mdir = f'assets/{NS}/models/magnified/'
-    write_magnified_models(root, MAG_WRAPPERS, sizes['large'], alt + 'magnify/large/')
-    _write_json(root, mdir + '.rpo', {'condition': '!hud.magnification.large', 'fallback': alt + 'magnify/large/'}); n += 1
-    write_magnified_models(root, MAG_WRAPPERS, sizes['small'], alt + 'magnify/small/')
-    _write_json(root, mdir + 'minecraft/.rpo', {'condition': '!hud.magnification.small', 'fallback': alt + 'magnify/small/minecraft/'}); n += 1
-    write_magnified_models(root, MAG_WRAPPERS, sizes['extraLarge'], alt + 'magnify/xl/')
-    for sub in sorted(os.listdir(os.path.join(root, mdir, 'minecraft'))):
-        if os.path.isdir(os.path.join(root, mdir, 'minecraft', sub)):
-            _write_json(root, mdir + f'minecraft/{sub}/.rpo',
-                        {'condition': '!hud.magnification.extraLarge', 'fallback': alt + f'magnify/xl/minecraft/{sub}/'}); n += 1
+    levels = [('', 's150', f'{v} < 1.44'),
+              ('m/', 's130', f'{v} < 1.25 | {v} >= 1.34'),
+              ('m/m/', 's120', f'{v} < 1.15 | {v} >= 1.25'),
+              ('m/m/m/', 's110', f'{v} < 1.05 | {v} >= 1.15')]
+    for sub, key, keep in levels:
+        base = alt + f'magnify/{key}/'
+        write_magnified_models(root, MAG_WRAPPERS, sizes[key], base)
+        _write_json(root, mdir + sub + '.rpo', {'condition': keep, 'fallback': base + sub}); n += 1
 
     # hud.selectionBubble ---------------------------------------------------------------------
     save_at(build_selection_bubble(), root, alt + 'bubble/hotbar_selection.png')
