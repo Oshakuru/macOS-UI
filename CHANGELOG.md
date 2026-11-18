@@ -1,8 +1,11 @@
 # Changelog
 
 ## 1.0.0 (2026-11-17), first official release
+- **Supports Minecraft 1.21.11, 26.1.x, 26.2 and 26.3 in one zip** (`min_format` 75.0, `max_format` 97). Checked against the 26.1.2, 26.2 and 26.3 client jars: every texture macUI replaces keeps its path, size and nine-slice metadata.
+- Styled the sprites added after 1.21.11: friends list buttons, cards and toast (26.2), Realms button (26.3) and the IME pre-edit box (26.1). They follow the button-shape setting. Their icons stay vanilla.
+- **Removed magnification.** Its 1,505 item definitions were copies of 1.21.11's and would have overridden items Mojang changed in 26.x (beds, banners, shulker boxes, heads, shield, trident, maps). The pack is now GUI-only again.
 - New title panorama: a snowy taiga captured by the owner in their own 1.21.11 world (six 1024px faces, unchanged). Provenance in `PANORAMA-SOURCE.txt`. Removed the unused third-party panorama sources from the repo.
-- First public release of macUI Light. Owner tested the 0.27 and 0.34–0.40 changes in game.
+- Owner tested the 0.27 and 0.34–0.40 changes in game on 1.21.11.
 
 ## 0.40 (2026-11-17), light prototype
 - Removed the custom title panorama at the owner's request. The title screen uses the vanilla panorama again; no panorama textures or source notice are packaged. Panorama sources stay in `design/panorama/` but are not built.

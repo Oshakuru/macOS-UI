@@ -3,8 +3,9 @@ import json
 from pathlib import Path
 from PIL import Image
 root = Path(__file__).resolve().parents[1]
+VERSION = __import__('re').search(r"VERSION = '([^']+)'", (root / 'tools/build.py').read_text()).group(1)
 source = root / 'reference/vanilla-1.21.11/assets/minecraft/textures/gui'
-pack = root / 'dist/macUI-Light-0.39/assets/minecraft/textures/gui'
+pack = root / f'dist/macUI-Light-{VERSION}/assets/minecraft/textures/gui'
 count = 0
 for folder in ('container', 'sprites/container'):
     for path in (source / folder).rglob('*.png'):

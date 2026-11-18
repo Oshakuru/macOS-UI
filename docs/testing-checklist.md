@@ -21,7 +21,6 @@ Check each restyled screen at **GUI scales 1, 2, 3, 4 and Auto**, in **day, nigh
 | Tooltips | Background and frame corners clean; text readable |
 | Recipe book | Tabs, search field (typing, focus edge), craftable toggle on/off, page arrows, craftable/uncraftable/multiple recipe tiles, alternatives popup |
 | Food bar | Full, half and empty apples; Hunger effect (green); readable on light and dark terrain |
-| Magnify add-on | With `macUI-Magnify` above macUI: selected hotbar item is bigger; scrolling between slots; blocks, flat items, compass/clock, shields, banners, heads, chests; inventory hotbar row |
 | Creative | Tabs, search, destroy-item slot, thin scrollbar drags correctly |
 
 ## Respackopts (optional)
@@ -29,17 +28,10 @@ Test once **without** the mod (everything must look like the defaults), then wit
 - [ ] The settings button appears next to the pack, with the labels translated.
 - [ ] Each setting switches correctly after the resource reload: selection bubble, hotbar style (dock/shelf), hotbar opacity (four levels), hotbar outline, food icons, button shape (buttons and sliders), glass player area (survival and creative).
 - [ ] Combinations: shelf + solid + outline, dock + frosted + bubble.
-- [ ] Magnify add-on setting: 1.00 (off), 1.25, 1.38, 1.50.
 - [ ] No errors in `latest.log` (use `/rpoc dump scope` if a condition misbehaves).
 
 ## Reporting
 Send a screenshot per issue, with the GUI scale.
-
-## Integrated magnification (0.24)
-- [ ] Plain vanilla defaults to 1.00x; bubble visible.
-- [ ] Respackopts: off filters item overrides; each magnification size selects the correct models after reload.
-- [ ] Bubble on/off independently of magnification.
-- [ ] Check item-definition pack conflicts and inventory hotbar behavior.
 
 ## Manrope numbers (0.25)
 - [ ] XP levels, item counts, menu values and chat digits at GUI scales 1–4; no clipping or overlap.
@@ -48,7 +40,7 @@ Send a screenshot per issue, with the GUI scale.
 
 ## Tight selection bubble (0.26)
 - [ ] Single items and stacks of 2, 16 and 64: count readable at GUI scales 1–4.
-- [ ] Compare bubble on/off, empty slot and optional magnification sizes; magnified items can extend beyond the fixed bubble.
+- [ ] Compare bubble on/off and empty slot.
 
 ## Container rollout (0.27)
 - [ ] Workstations: crafting, anvil rename/cost/error, grindstone, smithing, stonecutter, loom, cartography, crafter enabled/disabled slots and redstone.
@@ -83,3 +75,12 @@ Send a screenshot per issue, with the GUI scale.
 
 ## Panorama (1.0.0)
 - [ ] Title menu loads the six snowy taiga faces with no missing textures; full rotation without seams; title and button readability.
+
+## Minecraft 26.x (1.0.0)
+Run in 26.1.2, 26.2 and 26.3, each in a clean instance with only macUI:
+- [ ] The pack lists as compatible (no red warning) and `latest.log` shows no missing textures.
+- [ ] Inventory, a chest, the furnace, the anvil and the enchanting table; hotbar, XP bar and a toast.
+- [ ] Beds, banners, shulker boxes, heads, shield and trident render normally (vanilla item models).
+- [ ] 26.2+: friends list button on the title screen, friends list rows, buttons (normal, hover, disabled), friend request toast.
+- [ ] 26.3: Realms button (normal, hover, disabled).
+- [ ] Any version: type in a chat box with a Chinese or Japanese input method to see the pre-edit box.

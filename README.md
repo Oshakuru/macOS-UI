@@ -4,9 +4,9 @@
 
 Bring Apple's vibe to Minecraft's UI with a slick, minimalist style, while staying 100% vanilla.
 
-A GUI resource pack for **Minecraft Java Edition 1.21.11**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and restrained color accents.
+A GUI resource pack for **Minecraft Java Edition 1.21.11 and 26.1–26.3**: roughly 60% Vanilla Minecraft, 40% Apple design. It keeps Minecraft's pixel-art identity and adds Apple's restraint: light surfaces, clear hierarchy, soft rounded geometry and restrained color accents.
 
-> **Status:** 1.0.0, light theme. Includes light inventory and workstation screens, Liquid Glass shelf hotbar and marked XP/jump bars, Monocraft text and numbers, silver apple food icons, buttons, sliders and tooltips. Magnification is included but off by default; the selection bubble is on by default. Shulker color matching is optional through OptiGUI or OptiFine.
+> **Status:** 1.0.0, light theme. Includes light inventory and workstation screens, Liquid Glass shelf hotbar and marked XP/jump bars, Monocraft text and numbers, silver apple food icons, buttons, sliders and tooltips. The selection bubble is on by default. Shulker color matching is optional through OptiGUI or OptiFine.
 
 ## Screenshots
 
@@ -38,24 +38,19 @@ Generated texture preview, not an in-game capture. Color matching requires OptiG
 
 - **Vanilla-compatible base.** Core styling works without mods or shaders. Respackopts adds settings; OptiGUI or OptiFine adds automatic shulker color matching.
 - **Gameplay untouched.** Slot positions, hitboxes and interactions are exactly vanilla.
-- **Interface focused.** Includes optional item magnification through item definitions and GUI model wrappers; other item-definition packs can conflict.
+- **Interface focused.** GUI textures only: no item models or item definitions, so it combines cleanly with item and block packs.
 - **Apple principles, not a macOS copy.** Material hierarchy, restraint, contrast and craft, translated into pixel art.
 - **Performance first.** Small textures and stretched (not tiled) nine-slice centres.
 
-## Install (testing builds)
+## Install
 
-The pack is still being designed and tested, so there are no releases yet. To try it:
+1. Download `macUI-Light-<version>.zip` from [Releases](https://github.com/Oshakuru/macUI/releases).
+2. Put it in your `resourcepacks` folder without unzipping it (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
+3. Enable **macUI — Light** in Options → Resource Packs.
 
-1. Build it yourself (below).
-2. Copy the zip from `dist/` (e.g. `macUI-Light-1.0.0.zip`) into your `resourcepacks` folder (Prism Launcher: right-click the instance → Folder → `resourcepacks`).
-3. Enable it in Options → Resource Packs.
+One zip covers Minecraft 1.21.11, 26.1.x, 26.2 and 26.3. Screens added after 1.21.11 (the 26.2 friends list, the 26.3 Realms button and the IME text box) are styled to match.
 
-
-## Magnification
-
-Magnification is included in the main pack and **off by default**, including on plain vanilla. With Respackopts, choose 1.00× (off), 1.25×, 1.38× or 1.50× in the pack's Hotbar and HUD options. No separate add-on is needed.
-
-The pack includes item definitions and GUI model wrappers for this option. Packs that replace item definitions can conflict; item texture packs still work. On plain vanilla the wrappers use 1.00× scale. With Respackopts and magnification off, the item overrides are filtered out. Enlarged selected items also appear in the inventory hotbar row.
+To build it yourself, see [Build from source](#build-from-source).
 
 ## Optional: in-game settings (Respackopts)
 
@@ -63,7 +58,6 @@ The pack works on plain vanilla Minecraft. Players who also install the [Respack
 
 | Setting | Default | Options |
 |---|---|---|
-| Magnify selected item | Off (1.00×) | Off / 1.25× / 1.38× / 1.50× |
 | Glass bubble on selected slot | On | On / off |
 | Hotbar style | Shelf (glass ledge) | Shelf (glass ledge the items sit on) / Dock (glass bar) |
 | Hotbar opacity | Clear | Clear / frosted / dark / solid |
@@ -150,7 +144,7 @@ Prototype milestones, oldest first. These are development iterations, not indivi
 | 0.38 | Mountain meadow title panorama, adapted from the supplied image. |
 | 0.39 | Replaced the single-image wrap with a CC0 six-face Frozen Peaks & Cherry Valley panorama. |
 | 0.40 | Removed the custom panorama; the vanilla title panorama is back. |
-| 1.0.0 | First official release, with the owner's own snowy taiga title panorama. |
+| 1.0.0 | First official release: snowy taiga title panorama, support for 26.1–26.3, magnification removed. |
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 

@@ -798,94 +798,9 @@ def build_food(kind, palette):
     return im
 
 
-# ---------------------------------------------------------------- hotbar magnification
-# Dock-style magnification of the selected hotbar item, done entirely with vanilla item model
-# definitions (1.21.4+): every assets/minecraft/items/*.json is wrapped in
-#   condition minecraft:selected -> select minecraft:display_context == gui -> magnified model
-# where each magnified model is a one-line child of the original model with a larger "gui"
-# display transform. oversized_in_gui lets the bigger item draw past its 16x16 slot (1.21.6+).
-MODELS = os.path.join(REF, 'assets', 'minecraft', 'models')
-ITEMS = os.path.join(REF, 'assets', 'minecraft', 'items')
 NS = 'macui'
-MAG_WRAPPERS = {}
 VERSION = '1.0.0'   # single source for the pack title and the zip name
-
-
-def _model_json(mid):
-    ns, path = (mid.split(':', 1) + [None])[:2] if ':' in mid else ('minecraft', mid)
-    if ns != 'minecraft':
-        return None
-    f = os.path.join(MODELS, path + '.json')
-    return json.load(open(f)) if os.path.exists(f) else None
-
-
-def _gui_transform(mid, depth=0):
-    m = _model_json(mid)
-    if m is None or depth > 20:
-        return None
-    if 'display' in m and 'gui' in m['display']:
-        return m['display']['gui']
-    return _gui_transform(m['parent'], depth + 1) if 'parent' in m else None
-
-
-def _magnified_id(mid, wrappers):
-    full = mid if ':' in mid else 'minecraft:' + mid
-    ns, path = full.split(':', 1)
-    wid = f'{NS}:magnified/m/m/m/{ns}/{path}'   # m/m/m: one folder level per alternative size (see build_options)
-    if wid not in wrappers:
-        wrappers[wid] = (full, _gui_transform(full) or {})
-    return wid
-
-
-def write_magnified_models(root, wrappers, k, base=None):
-    """Write every wrapper model with gui scale multiplied by k under base (default: the real path)."""
-    for wid, (parent, g) in wrappers.items():
-        path = wid.split(':', 1)[1]                       # magnified/<ns>/<path>
-        scale = [round(v * k, 4) for v in g.get('scale', [1, 1, 1])]
-        gui = {'rotation': g.get('rotation', [0, 0, 0]), 'translation': g.get('translation', [0, 0, 0]), 'scale': scale}
-        rel = (base + path.split('/', 1)[1]) if base else os.path.join('assets', NS, 'models', path)
-        dest = os.path.join(root, rel + '.json')
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        json.dump({'parent': parent, 'display': {'gui': gui}}, open(dest, 'w'), separators=(',', ':'))
-
-
-def _magnify_tree(node, wrappers):
-    if isinstance(node, list):
-        return [_magnify_tree(n, wrappers) for n in node]
-    if not isinstance(node, dict):
-        return node
-    out = {}
-    for k, v in node.items():
-        if k in ('model', 'base') and isinstance(v, str):
-            out[k] = _magnified_id(v, wrappers)
-        else:
-            out[k] = _magnify_tree(v, wrappers)
-    return out
-
-
-def build_magnification(root):
-    wrappers = {}
-    n = 0
-    for f in sorted(os.listdir(ITEMS)):
-        if not f.endswith('.json'):
-            continue
-        d = json.load(open(os.path.join(ITEMS, f)))
-        orig = d['model']
-        d['model'] = {
-            'type': 'minecraft:condition', 'property': 'minecraft:selected',
-            'on_false': orig,
-            'on_true': {'type': 'minecraft:select', 'property': 'minecraft:display_context',
-                        'cases': [{'when': 'gui', 'model': _magnify_tree(orig, wrappers)}],
-                        'fallback': orig},
-        }
-        d['oversized_in_gui'] = True
-        dest = os.path.join(root, 'assets', 'minecraft', 'items', f)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        json.dump(d, open(dest, 'w'), separators=(',', ':'))
-        n += 1
-    write_magnified_models(root, wrappers, 1.0)
-    MAG_WRAPPERS.update(wrappers)
-    return n, len(wrappers)
+FORMATS = ([75, 0], 97)   # min 1.21.11; max 26.3.x (any 97 minor)
 
 
 # ---------------------------------------------------------------- optional in-game settings (Respackopts)
@@ -896,7 +811,6 @@ RPO_CONF = {
     'id': 'macUi', 'version': 13, 'capabilities': ['FileFilter', 'DirFilter', 'DirFilterAdditive'],
     'conf': {
         'hud': {
-            'magnification': {'type': 'enum', 'default': 'off', 'values': ['off', 'small', 'normal', 'large']},
             'selectionBubble': True,
             'hotbarStyle': {'type': 'enum', 'default': 'shelf', 'values': ['shelf', 'dock']},
             'hotbarOpacity': {'type': 'enum', 'default': 'clear', 'values': ['clear', 'frosted', 'dark', 'solid']},
@@ -933,10 +847,6 @@ _L = {
         'inventory': 'Inventario', 'inventory.glassPlayerArea': 'Cristal detrás del jugador',
     },
 }
-for lang, label in (('en_us', 'Magnify selected item'), ('es_mx', 'Ampliar objeto seleccionado')):
-    _L[lang].update({'hud.magnification': label, 'hud.magnification.off': '1.00× (off)',
-                     'hud.magnification.small': '1.25×', 'hud.magnification.normal': '1.38×',
-                     'hud.magnification.large': '1.50×'})
 RPO_LANG = {lang: {('rpo.macUi' + ('.' + k if k else '')): v for k, v in d.items()} for lang, d in _L.items()}
 
 
@@ -962,15 +872,6 @@ def build_options(root):
     for lang, entries in RPO_LANG.items():
         _write_json(root, f'assets/{NS}/lang/{lang}.json', entries)
     n = 0
-
-    # Vanilla uses unscaled wrappers; Respackopts selects the optional magnified sizes.
-    _rpo(root, 'assets/minecraft/items/', '!hud.magnification.off'); n += 1
-    mdir = f'assets/{NS}/models/magnified/'
-    for sub, key in (('', 'large'), ('m/', 'normal'), ('m/m/', 'small')):
-        base = alt + f'magnify/{key}/'
-        write_magnified_models(root, MAG_WRAPPERS, TOK['magnify.sizes'][key], base)
-        _write_json(root, mdir + sub + '.rpo',
-                    {'condition': f'!hud.magnification.{key}', 'fallback': base + sub}); n += 1
 
     # hud.selectionBubble ---------------------------------------------------------------------
     save_at(Image.new('RGBA', build_selection().size, (0, 0, 0, 0)),
@@ -1016,6 +917,13 @@ def build_options(root):
         for ext in ('.png', '.png.mcmeta'):
             rel = f'sprites/widget/{fn}{ext}'
             _rpo(root, gui + rel, 'widgets.buttonShape.pill', alt + 'rounded/' + rel); n += 1
+    # 26.2+ friends list and 26.3+ Realms buttons follow the same shape option.
+    for folder, prefix in NEWER_BUTTONS:
+        for st, suf in (('normal', ''), ('highlighted', '_highlighted'), ('disabled', '_disabled')):
+            rel = f'sprites/{folder}/{prefix}{suf}.png'
+            save_at(build_button(st, rr), root, alt + 'rounded/' + rel, nine(200, 20, rr))
+            for ext in ('', '.mcmeta'):
+                _rpo(root, gui + rel + ext, 'widgets.buttonShape.pill', alt + 'rounded/' + rel + ext); n += 1
 
     # inventory.glassPlayerArea: opaque tile instead of glass when off ---------------------------
     inv, _ = build_inventory(glass=False)
@@ -1023,6 +931,46 @@ def build_options(root):
     for rel, im in (('container/inventory.png', inv), ('container/creative_inventory/tab_inventory.png', tab)):
         save_at(im, root, alt + 'opaque/' + rel)
         _rpo(root, gui + rel, 'inventory.glassPlayerArea', alt + 'opaque/' + rel); n += 1
+    return n
+
+
+# ---------------------------------------------------------------- sprites added after 1.21.11
+# Minecraft 26.x only adds GUI sprites (no 1.21.11 sprite was renamed or resized), so these live in
+# the base pack: older versions simply never read the new paths. Icons stay vanilla, as elsewhere.
+NEWER_BUTTONS = (('friends', 'button'), ('widget', 'realms_button'))   # 26.2 friends list, 26.3 Realms
+
+
+def build_card(dark):
+    """236x34 friends-list row (white text): graphite card; the dark variant has a black edge."""
+    im = Image.new('RGBA', (236, 34), (0, 0, 0, 0))
+    r = TOK['notification.radius']
+    rrect(im, 0, 0, 236, 34, r, col('control.edge' if dark else 'field.edge'))
+    rrect(im, 1, 1, 234, 32, r - 1, col('control.fill'))
+    if not dark:
+        hline(im, r, 1, 236 - 2 * r, col('control.top'))
+    return im
+
+
+def build_preedit():
+    """26.1+ IME composition box (dark text on white): white field with the accent focus edge."""
+    im = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
+    rrect(im, 0, 0, 200, 20, 3, col('accent.fill'))
+    rrect(im, 1, 1, 198, 18, 2, col('panel.highlight'))
+    return im
+
+
+def build_newer_version_sprites(root, border):
+    n = 0
+    for folder, prefix in NEWER_BUTTONS:
+        for st, suf in (('normal', ''), ('highlighted', '_highlighted'), ('disabled', '_disabled')):
+            save(build_button(st, TOK['radius.button']), root, f'sprites/{folder}/{prefix}{suf}.png',
+                 nine(200, 20, border)); n += 1
+    save(build_card(False), root, 'sprites/friends/background.png', nine(236, 34, 8)); n += 1
+    save(build_card(True), root, 'sprites/friends/background_dark.png', nine(236, 34, 6)); n += 1
+    toast = liquid_glass_hd(160, 32, 0, 0, 160, 32, TOK['radius.dock'], underlay='liquid.underlay_hud',
+                            scale=TOK['hd.scale_hotbar'], rim=False)
+    save(toast, root, 'sprites/friends/toast_background.png', nine(160, 32, 10)); n += 1   # border >= glass radius
+    save(build_preedit(), root, 'sprites/widget/preedit.png', nine(200, 20, 3)); n += 1
     return n
 
 
@@ -1200,7 +1148,7 @@ def build_text_font(root):
 def build_pack(name, desc, btn_r):
     root = os.path.join(OUT, name)
     shutil.rmtree(root, ignore_errors=True); os.makedirs(root)
-    json.dump({"pack": {"description": desc, "min_format": [75, 0], "max_format": [75, 0]}},
+    json.dump({"pack": {"description": desc, "min_format": FORMATS[0], "max_format": FORMATS[1]}},
               open(os.path.join(root, 'pack.mcmeta'), 'w'), indent=2, ensure_ascii=False)
     build_icon().save(os.path.join(root, 'pack.png'))
     build_text_font(root)
@@ -1276,7 +1224,7 @@ def build_pack(name, desc, btn_r):
     report['containers'] = build_remaining_containers(root)
     build_shulker_colors(root)
     report['advancements_notifications'] = build_advancements_notifications(root)
-    report['magnification'] = dict(zip(('item_definitions', 'wrapper_models'), build_magnification(root)))
+    report['newer_versions'] = build_newer_version_sprites(root, border)
     report['rpo_files'] = build_options(root)
     z = os.path.join(OUT, name + '.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
